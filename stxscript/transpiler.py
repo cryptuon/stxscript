@@ -68,12 +68,16 @@ class StxScriptTransformer(Transformer):
 
     def asset_declaration(self, name, *fields):
         field_nodes = []
-        for field in fields:
-            if isinstance(field, list) and len(field) == 2:
-                field_name, field_type = field
-                field_nodes.append(Field(name=field_name, type=field_type))
+        for i in range(0, len(fields), 2):
+            if i + 1 < len(fields):
+                field_name = fields[i]
+                field_type = fields[i + 1]
+                if isinstance(field_name, Identifier) and isinstance(field_type, Type):
+                    field_nodes.append(Parameter(name=field_name.name, type=field_type))
+                else:
+                    raise SyntaxError(f"Unexpected field format: {field_name} {field_type}")
             else:
-                raise SyntaxError(f"Unexpected field format: {field}")
+                raise SyntaxError(f"Incomplete field definition for {fields[i]}")
         return AssetDeclaration(name=name, fields=field_nodes)
 
     def field(self, name, field_type):
@@ -259,7 +263,6 @@ class StxScriptTranspiler:
         try:
             parse_tree = self.parser.parse(input_code)
             ast = self.transformer.transform(parse_tree)
-            print(ast)
             clarity_code = self.generator.generate(ast)
             return clarity_code
         except Exception as e:

@@ -212,7 +212,7 @@ class ListComprehension(Expression):
     expression: Expression
     iterable: Expression
     iterator: Identifier
-    condition: Optional[Expression]
+    condition: Optional[Expression] = None
 
 @dataclass
 class ContractCallExpression(Expression):

@@ -8,21 +8,47 @@ class ClarityGenerator:
         return "  " * self.indent_level
 
     def generate(self, node):
-        # Debug print to check the type of node being processed
+        if node is None:
+            return ""
+        elif isinstance(node, str):
+            return self.generate_str(node)
+        elif isinstance(node, int):
+            return str(node)
+        elif isinstance(node, float):
+            return str(node)
+        elif isinstance(node, bool):
+            return 'true' if node else 'false'
+        elif isinstance(node, list):
+            return self.generate_list(node)
+        elif isinstance(node, tuple):
+            return self.generate_tuple(node)
+        elif isinstance(node, dict):
+            return self.generate_dict(node)
+        elif isinstance(node, Identifier):
+            return self.generate_Identifier(node)
+        elif isinstance(node, Type):
+            return self.generate_Type(node)
+    
         method = getattr(self, f'generate_{node.__class__.__name__}', None)
         if method is None:
             raise NotImplementedError(f"Generation not implemented for {node.__class__.__name__}")
         return method(node)
 
+    def generate_dict(self, node: dict):
+        return f'(tuple {" ".join(f"({self.generate(k)} {self.generate(v)})" for k, v in node.items())})'
+
+    def generate_list(self, node: list):
+        return f'(list {" ".join(self.generate(item) for item in node)})'
+
     def generate_Program(self, node: Program):
         return '\n'.join(self.generate(stmt) for stmt in node.statements)
 
     def generate_FunctionDeclaration(self, node: FunctionDeclaration):
-        decorators = ' '.join(node.decorators) or 'private'
+        is_public = any(d.name == '@public' for d in node.decorators)
+        func_type = 'public' if is_public else 'private'
         params = ' '.join(self.generate(param) for param in node.parameters)
-        return_type = f' {self.generate(node.return_type)}' if node.return_type else ''
         body = self.generate(node.body)
-        return f'(define-{decorators} ({node.name} {params}){return_type}\n{body})'
+        return f'(define-{func_type} ({node.name} {params})\n{self.indent()}{body})'
 
     def generate_VariableDeclaration(self, node: VariableDeclaration):
         type_str = self.generate(node.type) if node.type else ''
@@ -38,10 +64,9 @@ class ClarityGenerator:
         value_type = self.generate(node.value_type)
         return f'(define-map {node.name} {key_type} {value_type})'
 
-    def generate_AssetDeclaration(self, node):
-        # Here, `node.fields` should contain `Field` objects with `name` and `type` attributes.
-        fields = ' '.join(f'({self.generate(field.name)} {self.generate(field.type)})' for field in node.fields)
-        return f'(define-nft {self.generate(node.name)} ({fields}))'
+    def generate_AssetDeclaration(self, node: AssetDeclaration):
+        fields = ' '.join(f'({field.name} {self.generate(field.type)})' for field in node.fields)
+        return f'(define-non-fungible-token {node.name} {fields})'
 
     def generate_TraitDeclaration(self, node: TraitDeclaration):
         functions = '\n'.join(self.generate(func) for func in node.functions)
@@ -144,11 +169,20 @@ class ClarityGenerator:
         elements = ' '.join(f'({k} {self.generate(v)})' for k, v in node.elements.items())
         return f'(tuple {elements})'
 
+    def generate_str(self, node: str):
+        return node
+
     def generate_OptionalLiteral(self, node: OptionalLiteral):
         if node.value:
             return f'(some {self.generate(node.value)})'
         return 'none'
 
+    def generate_tuple(self, node):
+        if isinstance(node, tuple):
+            return ' '.join(self.generate(item) for item in node)
+        else:
+            raise NotImplementedError(f"Generation not implemented for {node.__class__.__name__}")
+        
     def generate_PrincipalLiteral(self, node: PrincipalLiteral):
         return f"'{node.value}'"
 
@@ -176,11 +210,11 @@ class ClarityGenerator:
     def generate_ContractCallExpression(self, node: ContractCallExpression):
         contract = self.generate(node.contract)
         args = ' '.join(self.generate(arg) for arg in node.arguments)
-        return f'(contract-call? {contract} {node.function} {args})'
+        return f'(contract-call? .{contract} {node.function} {args})'
 
     def generate_AssetCallExpression(self, node: AssetCallExpression):
         args = ' '.join(self.generate(arg) for arg in node.arguments)
-        return f'(nft-{node.function} {node.asset} {args})'
+        return f'(nft-{node.function}? {node.asset} {args})'
 
     def generate_MapExpression(self, node: MapExpression):
         list_expr = self.generate(node.list)
@@ -200,12 +234,12 @@ class ClarityGenerator:
 
     def generate_ListComprehension(self, node: ListComprehension):
         expression = self.generate(node.expression)
-        for_expr = self.generate(node.for_expr)
+        iterable = self.generate(node.iterable)
         iterator = self.generate(node.iterator)
         if node.condition:
             condition = self.generate(node.condition)
-            return f'(map {expression} (filter {condition} {for_expr}))'
-        return f'(map {expression} {for_expr})'
+            return f'(map {expression} (filter (lambda ({iterator}) {condition}) {iterable}))'
+        return f'(map (lambda ({iterator}) {expression}) {iterable})'
 
     def generate_ImportDeclaration(self, node: ImportDeclaration):
         imports = ' '.join(node.imports)
