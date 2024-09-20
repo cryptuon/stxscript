@@ -1,4 +1,4 @@
-from lark import Lark, Transformer, v_args
+from lark import Lark, Transformer, v_args, Token
 from .ast_nodes import *
 from .clarity_generator import ClarityGenerator
 
@@ -40,9 +40,9 @@ class StxScriptTransformer(Transformer):
             print(f"Unhandled statement type: {type(stmt)}")
             return stmt  # Return as-is for now, adjust as needed
 
-    
+    @v_args(inline=True)
     def function_declaration(self, *items):
-        
+        print(f"Debug: function_declaration called with items={items}")
         decorators = [d for d in items if isinstance(d, Identifier) and d.name.startswith('@')]
         name = next((i for i in items if isinstance(i, Identifier) and not i.name.startswith('@')), None)
         
@@ -53,7 +53,10 @@ class StxScriptTransformer(Transformer):
         return_type = next((i for i in items if isinstance(i, Type)), None)
         body = next((i for i in items if isinstance(i, Block)), None)
         
-        return FunctionDeclaration(decorators, name, params, return_type, body)
+        is_export = 'export' in [item.value for item in items if isinstance(item, Token)]
+        
+        func = FunctionDeclaration(decorators, name, params, return_type, body)
+        return ExportDeclaration(func) if is_export else func
 
     def variable_declaration(self, name, type_=None, value=None):
         return VariableDeclaration(name, type_, value)
@@ -80,6 +83,9 @@ class StxScriptTransformer(Transformer):
                 raise SyntaxError(f"Incomplete field definition for {fields[i]}")
         return AssetDeclaration(name=name, fields=field_nodes)
 
+    def asset_call_expression(self, asset, function, *args):
+        return AssetCallExpression(asset, function, list(args))
+
     def field(self, name, field_type):
         return [name, field_type]  # Return as a list of name and type for asset_declaration to unpack
 
@@ -91,7 +97,7 @@ class StxScriptTransformer(Transformer):
 
     def expression_statement(self, expr):
         return ExpressionStatement(expr)
-
+    @v_args(inline=True)
     def if_statement(self, condition, true_block, *else_ifs_and_else):
         else_ifs = []
         else_block = None
@@ -112,12 +118,14 @@ class StxScriptTransformer(Transformer):
         return ReturnStatement(expr)
 
     def import_declaration(self, *items):
-        imports = [item for item in items if isinstance(item, str) and item != 'from']
-        module = items[-1]
+        print(f"Debug: import_declaration called with items={items}")
+        imports = [item.name if isinstance(item, Identifier) else item for item in items if item != 'from']
+        module = items[-1].value if isinstance(items[-1], Token) else items[-1]
         return ImportDeclaration(module, imports)
 
-    def export_declaration(self, declaration):
-        return ExportDeclaration(declaration)
+    def export_declaration(self, func):
+        print(f"Debug: export_declaration called with func={func}")
+        return ExportDeclaration(func)
 
     def expression(self, expr):
         return expr
@@ -167,17 +175,47 @@ class StxScriptTransformer(Transformer):
                 expr = TypeAssertion(expr, p.asserted_type)
         return expr
 
-    def call_expression(self, *args):
-        return CallExpression(None, list(args))
-
-    def member_expression(self, property):
-        return MemberExpression(None, property)
+    @v_args(tree=True)
+    def call_expression(self, tree):
+        print(f"Debug: call_expression called with tree={tree}")
+        children = tree.children
+        if len(children) < 1:
+            raise ValueError("call_expression requires at least a callee")
+        
+        callee = children[0]
+        args = children[1:] if len(children) > 1 else []
+        
+        if isinstance(callee, AssetCallExpression):
+            callee.arguments = list(args)
+            return callee
+        return CallExpression(callee=callee, arguments=list(args))
+        
+    @v_args(inline=True)
+    def member_expression(self, obj, prop=None):
+        print(f"Debug: member_expression called with obj={obj}, prop={prop}")
+        if prop is None:
+            return obj
+        if isinstance(obj, Identifier) and obj.name == 'NFT':
+            return AssetCallExpression(asset='NFT', function=prop.name, arguments=[])
+        return MemberExpression(object=obj, property=prop)
 
     def is_expression(self, type_):
         return TypeCheck(None, type_)
 
     def as_expression(self, type_):
         return TypeAssertion(None, type_)
+
+    def is_ok_expression(self, expr):
+        print(f"Debug: is_ok_expression called with expr={expr}")
+        return CallExpression(callee=MemberExpression(expr, Identifier('isOk')), arguments=[])
+    
+    def ok_expression(self, value):
+        print(f"Debug: ok_expression called with value={value}")
+        return CallExpression(callee=Identifier('ok'), arguments=[value])
+
+    def err_expression(self, value):
+        print(f"Debug: err_expression called with value={value}")
+        return CallExpression(callee=Identifier('err'), arguments=[value])
 
     def array_or_list_literal(self, *items):
         return ListLiteral(list(items))
@@ -252,6 +290,10 @@ class StxScriptTransformer(Transformer):
         if isinstance(value, list):
             return value[0]  # If value is a list, return the first element (e.g., Identifier, Literal, etc.)
         return value
+    
+    def generate_MemberExpression(self, node: MemberExpression):
+        obj = self.generate(node.object)
+        return f'(get {node.property} {obj})'
 class StxScriptTranspiler:
     def __init__(self):
         with open('stxscript/grammar.lark', 'r') as grammar_file:
@@ -263,7 +305,9 @@ class StxScriptTranspiler:
         try:
             parse_tree = self.parser.parse(input_code)
             ast = self.transformer.transform(parse_tree)
+            print("AST:", ast)  # Add this line
             clarity_code = self.generator.generate(ast)
+            print("Clarity Code:", clarity_code)
             return clarity_code
         except Exception as e:
             raise SyntaxError(f"Transpilation failed: {str(e)}")
