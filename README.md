@@ -1,9 +1,11 @@
-# StxScript: A High-Level Language for Stacks Smart Contracts
+# StxScript: Making stacks(STX) development easy (Clarity)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Versions](https://img.shields.io/pypi/pyversions/stxscript.svg)](https://pypi.org/project/stxscript/)
 
 StxScript is a high-level language and transpiler for writing smart contracts on the Stacks blockchain. It provides a more familiar and expressive syntax compared to Clarity, while still compiling down to valid Clarity code.
+
+[EXPERIMENTAL] : Under active development.
 
 ## Table of Contents
 
