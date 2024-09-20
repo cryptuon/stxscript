@@ -67,7 +67,17 @@ class StxScriptTransformer(Transformer):
         return MapDeclaration(name, key_type, value_type)
 
     def asset_declaration(self, name, *fields):
-        return AssetDeclaration(name, list(fields))
+        field_nodes = []
+        for field in fields:
+            if isinstance(field, list) and len(field) == 2:
+                field_name, field_type = field
+                field_nodes.append(Field(name=field_name, type=field_type))
+            else:
+                raise SyntaxError(f"Unexpected field format: {field}")
+        return AssetDeclaration(name=name, fields=field_nodes)
+
+    def field(self, name, field_type):
+        return [name, field_type]  # Return as a list of name and type for asset_declaration to unpack
 
     def trait_declaration(self, name, *functions):
         return TraitDeclaration(name, list(functions))
@@ -231,9 +241,7 @@ class StxScriptTransformer(Transformer):
         return value
     
     def lambda_expression(self, parameters, body):
-        params = [self.visit(param) for param in parameters]
-        body_expr = self.visit(body)
-        return LambdaExpression(params, body_expr)
+        return LambdaExpression(parameters, body)
     
     def primary_expression(self, value):
         # Example transformation logic for primary expression (adjust based on actual grammar)

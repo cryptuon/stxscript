@@ -38,9 +38,10 @@ class ClarityGenerator:
         value_type = self.generate(node.value_type)
         return f'(define-map {node.name} {key_type} {value_type})'
 
-    def generate_AssetDeclaration(self, node: AssetDeclaration):
-        fields = ' '.join(f'({field.name} {self.generate(field.type)})' for field in node.fields)
-        return f'(define-non-fungible-token {node.name} {fields})'
+    def generate_AssetDeclaration(self, node):
+        # Here, `node.fields` should contain `Field` objects with `name` and `type` attributes.
+        fields = ' '.join(f'({self.generate(field.name)} {self.generate(field.type)})' for field in node.fields)
+        return f'(define-nft {self.generate(node.name)} ({fields}))'
 
     def generate_TraitDeclaration(self, node: TraitDeclaration):
         functions = '\n'.join(self.generate(func) for func in node.functions)
@@ -110,7 +111,9 @@ class ClarityGenerator:
 
     def generate_CallExpression(self, node: CallExpression):
         callee = self.generate(node.callee)
-        args = ' '.join(self.generate(arg) for arg in node.arguments)
+        # Flatten arguments in case they are nested
+        flat_args = [item for sublist in node.arguments for item in (sublist if isinstance(sublist, list) else [sublist])]
+        args = ' '.join(self.generate(arg) for arg in flat_args)
         return f'({callee} {args})'
 
     def generate_MemberExpression(self, node: MemberExpression):

@@ -179,6 +179,11 @@ class TupleType(Type):
         self.fields = fields
 
 @dataclass
+class Field(Node):
+    def __init__(self, name, type):
+        self.name = name
+        self.type = type
+@dataclass
 class OptionalType(Type):
     value_type: Type
 
