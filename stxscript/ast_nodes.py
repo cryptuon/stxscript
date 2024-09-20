@@ -21,9 +21,14 @@ class Expression(Node):
 class Type(Node):
     name: str
 
-@dataclass
 class Identifier(Expression):
     name: str
+    
+    def __init__(self, name: str):
+        self.name = name
+        
+    def __hash__(self):
+        return hash(self.name)
 
 @dataclass
 class FunctionDeclaration(Statement):
