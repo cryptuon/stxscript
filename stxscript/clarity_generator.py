@@ -28,17 +28,29 @@ class ClarityGenerator:
             return self.generate_Identifier(node)
         elif isinstance(node, Type):
             return self.generate_Type(node)
-    
+        
         method = getattr(self, f'generate_{node.__class__.__name__}', None)
         if method is None:
             raise NotImplementedError(f"Generation not implemented for {node.__class__.__name__}")
         return method(node)
 
-    def generate_dict(self, node: dict):
-        return f'(tuple {" ".join(f"({self.generate(k)} {self.generate(v)})" for k, v in node.items())})'
+    def generate_str(self, node: str):
+        return f'"{node}"'
 
     def generate_list(self, node: list):
         return f'(list {" ".join(self.generate(item) for item in node)})'
+
+    def generate_tuple(self, node: tuple):
+        return f'(tuple {" ".join(self.generate(item) for item in node)})'
+
+    def generate_dict(self, node: dict):
+        return f'(tuple {" ".join(f"({self.generate(k)} {self.generate(v)})" for k, v in node.items())})'
+
+    def generate_Identifier(self, node: Identifier):
+        return node.name
+
+    def generate_Type(self, node: Type):
+        return node.name
 
     def generate_Program(self, node: Program):
         return '\n'.join(self.generate(stmt) for stmt in node.statements)
@@ -69,8 +81,8 @@ class ClarityGenerator:
         return f'(define-non-fungible-token {node.name} {fields})'
 
     def generate_TraitDeclaration(self, node: TraitDeclaration):
-        functions = '\n'.join(self.generate(func) for func in node.functions)
-        return f'(define-trait {node.name}\n{functions})'
+        functions = '\n'.join(f'({self.generate(func)})' for func in node.functions)
+        return f'(define-trait {node.name}\n{self.indent()}({functions}))'
 
     def generate_Parameter(self, node: Parameter):
         return f'({node.name} {self.generate(node.type)})'
@@ -84,23 +96,13 @@ class ClarityGenerator:
     def generate_IfStatement(self, node: IfStatement):
         condition = self.generate(node.condition)
         true_block = self.generate(node.true_block)
-        result = f'(if {condition}\n{true_block}\n'
-        for else_if in node.else_ifs:
-            else_if_condition = self.generate(else_if.condition)
-            else_if_block = self.generate(else_if.block)
-            result += f'{self.indent()}(if {else_if_condition}\n{else_if_block}\n'
-        if node.else_block:
-            else_block = self.generate(node.else_block)
-            result += f'{self.indent()}{else_block})'
-        else:
-            result += f'{self.indent()})'
-        result += ')' * (len(node.else_ifs) + 1)
-        return result
+        else_block = self.generate(node.else_block) if node.else_block else ''
+        return f'(if {condition}\n{self.indent()}{true_block}\n{self.indent()}{else_block})'
 
     def generate_TryCatchStatement(self, node: TryCatchStatement):
         try_block = self.generate(node.try_block)
         catch_block = self.generate(node.catch_block)
-        return f'(try {try_block}\n{self.indent()}(catch {node.error_var} {catch_block}))'
+        return f'(try\n{self.indent()}{try_block}\n{self.indent()}(catch {node.error_var} {catch_block}))'
 
     def generate_ThrowStatement(self, node: ThrowStatement):
         expr = self.generate(node.expression)
@@ -118,15 +120,11 @@ class ClarityGenerator:
     def generate_BinaryExpression(self, node: BinaryExpression):
         left = self.generate(node.left)
         right = self.generate(node.right)
-        op = node.operator
-        if op in ['&&', '||']:
-            op = 'and' if op == '&&' else 'or'
-        return f'({op} {left} {right})'
+        return f'({node.operator} {left} {right})'
 
     def generate_UnaryExpression(self, node: UnaryExpression):
         expr = self.generate(node.expression)
-        op = 'not' if node.operator == '!' else node.operator
-        return f'({op} {expr})'
+        return f'({node.operator} {expr})'
 
     def generate_TernaryExpression(self, node: TernaryExpression):
         condition = self.generate(node.condition)
@@ -136,9 +134,7 @@ class ClarityGenerator:
 
     def generate_CallExpression(self, node: CallExpression):
         callee = self.generate(node.callee)
-        # Flatten arguments in case they are nested
-        flat_args = [item for sublist in node.arguments for item in (sublist if isinstance(sublist, list) else [sublist])]
-        args = ' '.join(self.generate(arg) for arg in flat_args)
+        args = ' '.join(self.generate(arg) for arg in node.arguments)
         return f'({callee} {args})'
 
     def generate_MemberExpression(self, node: MemberExpression):
@@ -146,21 +142,10 @@ class ClarityGenerator:
         return f'(get {node.property} {obj})'
 
     def generate_Literal(self, node: Literal):
-        if isinstance(node.value, (int, float)):
-            return str(node.value)
-        elif isinstance(node.value, str):
+        if isinstance(node.value, str):
             return f'"{node.value}"'
-        elif isinstance(node.value, bool):
-            return 'true' if node.value else 'false'
-        elif isinstance(node.value, list):
-            items = ' '.join(self.generate(item) for item in node.value)
-            return f'(list {items})'
-        elif isinstance(node.value, dict):
-            items = ' '.join(f'({k} {self.generate(v)})' for k, v in node.value.items())
-            return f'(tuple {items})'
-        else:
-            raise ValueError(f"Unsupported literal type: {type(node.value)}")
-                                                          
+        return str(node.value)
+
     def generate_ListLiteral(self, node: ListLiteral):
         elements = ' '.join(self.generate(elem) for elem in node.elements)
         return f'(list {elements})'
@@ -169,28 +154,13 @@ class ClarityGenerator:
         elements = ' '.join(f'({k} {self.generate(v)})' for k, v in node.elements.items())
         return f'(tuple {elements})'
 
-    def generate_str(self, node: str):
-        return node
-
     def generate_OptionalLiteral(self, node: OptionalLiteral):
         if node.value:
             return f'(some {self.generate(node.value)})'
         return 'none'
 
-    def generate_tuple(self, node):
-        if isinstance(node, tuple):
-            return ' '.join(self.generate(item) for item in node)
-        else:
-            raise NotImplementedError(f"Generation not implemented for {node.__class__.__name__}")
-        
     def generate_PrincipalLiteral(self, node: PrincipalLiteral):
         return f"'{node.value}'"
-
-    def generate_Identifier(self, node: Identifier):
-        return node.name
-
-    def generate_Type(self, node: Type):
-        return node.name
 
     def generate_ListType(self, node: ListType):
         return f'(list {self.generate(node.element_type)})'
@@ -236,14 +206,13 @@ class ClarityGenerator:
         expression = self.generate(node.expression)
         iterable = self.generate(node.iterable)
         iterator = self.generate(node.iterator)
-        if node.condition:
-            condition = self.generate(node.condition)
+        condition = self.generate(node.condition) if node.condition else None
+        if condition:
             return f'(map {expression} (filter (lambda ({iterator}) {condition}) {iterable}))'
         return f'(map (lambda ({iterator}) {expression}) {iterable})'
 
     def generate_ImportDeclaration(self, node: ImportDeclaration):
-        imports = ' '.join(node.imports)
-        return f'(use-trait {imports} .{node.module})'
+        return f'(use-trait {" ".join(node.imports)} .{node.module})'
 
     def generate_ExportDeclaration(self, node: ExportDeclaration):
         return self.generate(node.declaration)
