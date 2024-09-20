@@ -178,18 +178,21 @@ class StxScriptTransformer(Transformer):
     @v_args(tree=True)
     def call_expression(self, tree):
         print(f"Debug: call_expression called with tree={tree}")
-        children = tree.children
-        if len(children) < 1:
-            raise ValueError("call_expression requires at least a callee")
+        print(f"Debug: tree.children = {tree.children}")
         
-        callee = children[0]
-        args = children[1:] if len(children) > 1 else []
+        if not tree.children:
+            raise ValueError(f"call_expression requires at least a callee. Tree: {tree}")
+        
+        callee = tree.children[0]
+        args = tree.children[1] if len(tree.children) > 1 else []
+        
+        print(f"Debug: callee = {callee}, args = {args}")
         
         if isinstance(callee, AssetCallExpression):
-            callee.arguments = list(args)
+            callee.arguments = args
             return callee
-        return CallExpression(callee=callee, arguments=list(args))
-        
+        return CallExpression(callee=callee, arguments=args)
+            
     @v_args(inline=True)
     def member_expression(self, obj, prop=None):
         print(f"Debug: member_expression called with obj={obj}, prop={prop}")
