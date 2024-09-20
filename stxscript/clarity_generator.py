@@ -28,6 +28,8 @@ class ClarityGenerator:
             return self.generate_Identifier(node)
         elif isinstance(node, Type):
             return self.generate_Type(node)
+        elif isinstance(node, AssetCallExpression):
+            return self.generate_AssetCallExpression(node)
         
         method = getattr(self, f'generate_{node.__class__.__name__}', None)
         if method is None:
@@ -184,7 +186,14 @@ class ClarityGenerator:
 
     def generate_AssetCallExpression(self, node: AssetCallExpression):
         args = ' '.join(self.generate(arg) for arg in node.arguments)
-        return f'(nft-{node.function}? {node.asset} {args})'
+        if node.function == 'mint':
+            return f'(nft-mint? {node.asset} {args})'
+        elif node.function == 'transfer':
+            return f'(nft-transfer? {node.asset} {args})'
+        elif node.function == 'burn':
+            return f'(nft-burn? {node.asset} {args})'
+        else:
+            raise NotImplementedError(f"Unsupported asset function: {node.function}")
 
     def generate_MapExpression(self, node: MapExpression):
         list_expr = self.generate(node.list)
