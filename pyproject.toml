@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "stxscript"
+version = "0.1.0"
+description = "A transpiler for StxScript to Clarity"
+authors = ["Dipankar Sarkar<me@dipankar.name>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/cryptuon/stxscript"
+repository = "https://github.com/cryptuon/stxscript"
+documentation = "https://github.com/cryptuon/stxscript"
+keywords = ["stacks", "clarity", "blockchain", "smart-contracts", "transpiler"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+lark = "^1.1.5"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+black = "^21.12b0"
+flake8 = "^4.0.1"
+mypy = "^0.910"
+
+[tool.poetry.scripts]
+stxscript = "stxscript.cli:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py37']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.7"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
