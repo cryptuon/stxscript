@@ -8,6 +8,7 @@ class ClarityGenerator:
         return "  " * self.indent_level
 
     def generate(self, node):
+        # Debug print to check the type of node being processed
         method = getattr(self, f'generate_{node.__class__.__name__}', None)
         if method is None:
             raise NotImplementedError(f"Generation not implemented for {node.__class__.__name__}")
@@ -131,7 +132,7 @@ class ClarityGenerator:
             return f'(tuple {items})'
         else:
             raise ValueError(f"Unsupported literal type: {type(node.value)}")
-
+                                                          
     def generate_ListLiteral(self, node: ListLiteral):
         elements = ' '.join(self.generate(elem) for elem in node.elements)
         return f'(list {elements})'
@@ -219,3 +220,8 @@ class ClarityGenerator:
         expr = self.generate(node.expression)
         checked_type = self.generate(node.checked_type)
         return f'(is-{checked_type} {expr})'
+
+    def generate_LambdaExpression(self, node: LambdaExpression):
+        params = ' '.join(self.generate(param) for param in node.parameters)
+        body = self.generate(node.body)
+        return f'(lambda ({params}) {body})'

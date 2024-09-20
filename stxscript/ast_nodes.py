@@ -26,9 +26,12 @@ class Identifier(Expression):
     
     def __init__(self, name: str):
         self.name = name
-        
+
     def __hash__(self):
         return hash(self.name)
+    
+    def __repr__(self) -> str:
+        return self.name
 
 @dataclass
 class FunctionDeclaration(Statement):
@@ -243,3 +246,13 @@ class FunctionSignature(Node):
     name: str
     parameters: List[Parameter]
     return_type: Type
+
+@dataclass
+class LambdaExpression(Expression):
+    parameters: List[Parameter]
+    body: Expression
+
+    def __init__(self, parameters, body):
+        super().__init__()
+        self.parameters = parameters
+        self.body = body

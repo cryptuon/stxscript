@@ -46,6 +46,7 @@ export_declaration: "export" (function_declaration | variable_declaration | cons
 
 expression: assignment_expression
           | list_comprehension
+          | lambda_expression
 
 assignment_expression: conditional_expression ("=" assignment_expression)?
 
@@ -100,6 +101,8 @@ arguments: expression ("," expression)*
 parameters: parameter ("," parameter)*
 
 parameter: IDENTIFIER ":" type
+
+lambda_expression: "(" parameters ")" "=>" expression
 
 block: "{" statement* "}"
 

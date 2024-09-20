@@ -7,15 +7,44 @@ class StxScriptTransformer(Transformer):
     def program(self, *statements):
         return Program(list(statements))
 
+    def statement(self, stmt):
+        # Transformation logic for 'statement' rule (adjust based on actual grammar and structure)
+        if isinstance(stmt, FunctionDeclaration):
+            return stmt
+        elif isinstance(stmt, ReturnStatement):
+            return stmt
+        elif isinstance(stmt, VariableDeclaration):
+            return stmt
+        elif isinstance(stmt, ConstantDeclaration):
+            return stmt
+        elif isinstance(stmt, IfStatement):
+            return stmt
+        elif isinstance(stmt, TryCatchStatement):
+            return stmt
+        elif isinstance(stmt, ThrowStatement):
+            return stmt
+        elif isinstance(stmt, ExpressionStatement):
+            return stmt
+        elif isinstance(stmt, MapDeclaration):
+            return stmt
+        elif isinstance(stmt, AssetDeclaration):
+            return stmt
+        elif isinstance(stmt, TraitDeclaration):
+            return stmt
+        elif isinstance(stmt, ImportDeclaration):
+            return stmt
+        elif isinstance(stmt, ExportDeclaration):
+            return stmt
+        else:
+            # Log the unhandled statement for debugging
+            print(f"Unhandled statement type: {type(stmt)}")
+            return stmt  # Return as-is for now, adjust as needed
+
+    
     def function_declaration(self, *items):
-        print("Function Declaration Items:", items)
-        print("Types of items:", [type(item) for item in items])
         
         decorators = [d for d in items if isinstance(d, Identifier) and d.name.startswith('@')]
         name = next((i for i in items if isinstance(i, Identifier) and not i.name.startswith('@')), None)
-        
-        print("Decorators:", decorators)
-        print("Name:", name)
         
         if name is None:
             raise ValueError("Function name not found in declaration")
@@ -23,10 +52,6 @@ class StxScriptTransformer(Transformer):
         params = next((i for i in items if isinstance(i, list)), [])
         return_type = next((i for i in items if isinstance(i, Type)), None)
         body = next((i for i in items if isinstance(i, Block)), None)
-        
-        print("Params:", params)
-        print("Return Type:", return_type)
-        print("Body:", body)
         
         return FunctionDeclaration(decorators, name, params, return_type, body)
 
@@ -163,6 +188,10 @@ class StxScriptTransformer(Transformer):
 
     def type(self, name):
         return Type(name)
+    
+    def type_identifier(self, token):
+        # Assuming `token` is a Lark token with a `value` attribute representing the type name
+        return Type(token.value)
 
     def list_type(self, elem_type):
         return ListType(elem_type)
@@ -185,8 +214,9 @@ class StxScriptTransformer(Transformer):
     def literal(self, value):
         return Literal(value)
 
-    def IDENTIFIER(self, value):
-        return Identifier(value)
+    def IDENTIFIER(self, token):
+        # Assuming `token` is a Lark token with a `value` attribute representing the identifier's name
+        return Identifier(token.value)
 
     def NUMBER(self, value):
         return int(value) if value.isdigit() else float(value)
@@ -199,7 +229,17 @@ class StxScriptTransformer(Transformer):
 
     def PRINCIPAL(self, value):
         return value
-
+    
+    def lambda_expression(self, parameters, body):
+        params = [self.visit(param) for param in parameters]
+        body_expr = self.visit(body)
+        return LambdaExpression(params, body_expr)
+    
+    def primary_expression(self, value):
+        # Example transformation logic for primary expression (adjust based on actual grammar)
+        if isinstance(value, list):
+            return value[0]  # If value is a list, return the first element (e.g., Identifier, Literal, etc.)
+        return value
 class StxScriptTranspiler:
     def __init__(self):
         with open('stxscript/grammar.lark', 'r') as grammar_file:
@@ -211,6 +251,7 @@ class StxScriptTranspiler:
         try:
             parse_tree = self.parser.parse(input_code)
             ast = self.transformer.transform(parse_tree)
+            print(ast)
             clarity_code = self.generator.generate(ast)
             return clarity_code
         except Exception as e:
