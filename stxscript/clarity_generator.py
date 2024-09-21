@@ -58,7 +58,7 @@ class ClarityGenerator:
         return '\n'.join(self.generate(stmt) for stmt in node.statements)
 
     def generate_FunctionDeclaration(self, node: FunctionDeclaration):
-        is_public = any(d.name == '@public' for d in node.decorators)
+        is_public = any(d == '@public' for d in node.decorators)
         func_type = 'public' if is_public else 'private'
         params = ' '.join(self.generate(param) for param in node.parameters)
         body = self.generate(node.body)
@@ -83,7 +83,7 @@ class ClarityGenerator:
         return f'(define-non-fungible-token {node.name} {fields})'
 
     def generate_TraitDeclaration(self, node: TraitDeclaration):
-        functions = '\n'.join(f'({self.generate(func)})' for func in node.functions)
+        functions = '\n'.join(self.generate(func) for func in node.functions)
         return f'(define-trait {node.name}\n{self.indent()}({functions}))'
 
     def generate_Parameter(self, node: Parameter):
@@ -98,8 +98,11 @@ class ClarityGenerator:
     def generate_IfStatement(self, node: IfStatement):
         condition = self.generate(node.condition)
         true_block = self.generate(node.true_block)
-        else_block = self.generate(node.else_block) if node.else_block else ''
-        return f'(if {condition}\n{self.indent()}{true_block}\n{self.indent()}{else_block})'
+        else_block = self.generate(node.else_block) if node.else_block else None
+        if else_block:
+            return f'(if {condition}\n{self.indent()}{true_block}\n{self.indent()}{else_block})'
+        else:
+            return f'(if {condition}\n{self.indent()}{true_block}\n{self.indent()})'
 
     def generate_TryCatchStatement(self, node: TryCatchStatement):
         try_block = self.generate(node.try_block)
@@ -209,7 +212,7 @@ class ClarityGenerator:
         list_expr = self.generate(node.list)
         initial = self.generate(node.initial)
         function = self.generate(node.function)
-        return f'(fold {list_expr} {initial} {function})'
+        return f'(fold {function} {initial} {list_expr})'
 
     def generate_ListComprehension(self, node: ListComprehension):
         expression = self.generate(node.expression)
