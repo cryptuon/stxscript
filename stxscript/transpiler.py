@@ -181,7 +181,8 @@ class StxScriptTransformer(Transformer):
         print(f"Debug: tree.children = {tree.children}")
         
         if not tree.children:
-            raise ValueError(f"call_expression requires at least a callee. Tree: {tree}")
+            print(f"call_expression requires at least a callee. Tree: {tree}")
+            return CallExpression(callee=None, arguments=[])
         
         callee = tree.children[0]
         args = tree.children[1] if len(tree.children) > 1 else []
