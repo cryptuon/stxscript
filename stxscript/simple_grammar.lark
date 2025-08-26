@@ -1,0 +1,178 @@
+// StxScript Lark Grammar
+
+// Root rule
+start: (statement | function_declaration | class_declaration | trait_declaration)*
+
+// Statements
+statement: variable_declaration
+         | constant_declaration
+         | expression_statement
+         | if_statement
+         | try_catch_statement
+         | throw_statement
+         | return_statement
+
+// Declarations
+variable_declaration: "let" IDENTIFIER [":" type] "=" expression ";"
+constant_declaration: "const" IDENTIFIER [":" type] "=" expression ";"
+function_declaration: decorator* "function" IDENTIFIER "(" [parameter_list] ")" [":" type] block
+class_declaration: decorator* "class" IDENTIFIER ["implements" IDENTIFIER ("," IDENTIFIER)*] "{" class_body "}"
+trait_declaration: "trait" IDENTIFIER "{" trait_body "}"
+
+// Expression statement
+expression_statement: expression ";"
+
+// Function-related
+parameter_list: parameter ("," parameter)*
+parameter: PARAM_IDENTIFIER ":" type
+lambda_function: "(" [parameter_list] ")" [":" type] "=>" (expression | block)
+
+// Types
+type: "int" | "uint" | "boolean" | "string" | "buffer" | "principal" | "trait"
+    | "list" "<" type ">"
+    | "optional" "<" type ">"
+    | "{" [tuple_type_list] "}"
+    | "Response" "<" type "," type ">"
+    | "Map" "<" type "," type ">"
+
+tuple_type_list: PARAM_IDENTIFIER ":" type ("," PARAM_IDENTIFIER ":" type)*
+
+// Expressions
+expression: unary_operation
+          | binary_operation
+          | atom
+
+atom: literal
+    | IDENTIFIER
+    | function_call
+    | member_access
+    | array_access
+    | lambda_function
+    | "(" expression ")"
+    | ternary_operation
+    | type_assertion
+    | type_check
+    | optional_none
+    | optional_some
+    | unwrap_expression
+    | response_ok
+    | response_err
+    | map_creation
+    | map_operation
+    | filter_operation
+    | fold_operation
+    | list_operation
+    | clarity_function_call
+    | contract_call
+    | read_only_call
+    | parse_function
+    | compose_function
+    | constant_time_comparison
+
+binary_operation: expression binary_operator expression
+unary_operation: unary_operator expression
+
+binary_operator: "+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" 
+               | "&" | "|" | "^" | "<<" | ">>" | "??" | "=" | "+=" | "-=" | "*=" | "/=" | "%=" 
+               | "&=" | "|=" | "^=" | "<<=" | ">>="
+
+unary_operator: "+" | "-" | "!" | "~"
+
+ternary_operation: expression "?" expression ":" expression
+
+function_call: (IDENTIFIER | member_access) "(" [argument_list] ")"
+argument_list: (named_argument | expression) ("," (named_argument | expression))*
+named_argument: PARAM_IDENTIFIER ":" expression
+
+member_access: expression "." IDENTIFIER
+
+array_access: expression "[" expression "]"
+
+type_assertion: expression "as" type
+type_check: expression "is" type
+
+optional_none: "none" "(" ")"
+optional_some: "some" "(" expression ")"
+unwrap_expression: expression "!"
+
+response_ok: "ok" "(" expression ")"
+response_err: "err" "(" expression ")"
+
+map_creation: "new" "Map" "<" type "," type ">" "(" ")"
+
+map_operation: "map" "(" expression "," lambda_function ")"
+filter_operation: "filter" "(" expression "," lambda_function ")"
+fold_operation: "fold" "(" expression "," expression "," lambda_function ")"
+
+list_operation: "list:" ("append" | "len" | "element-at?") "(" argument_list ")"
+
+clarity_function_call: "clarity." IDENTIFIER "(" [argument_list] ")"
+
+contract_call: IDENTIFIER "." IDENTIFIER "(" [argument_list] ")" [block_limit]
+read_only_call: contract_call ".readonly" "(" ")"
+block_limit: ".limit" ("Height" | "Time") "(" expression ")"
+
+parse_function: "clarity.to" ("Int" | "Uint") "(" expression ")"
+
+compose_function: "compose" "(" function_call ("," function_call)+ ")"
+
+constant_time_comparison: "clarity.constantTimeBufferEq" "(" expression "," expression ")"
+
+// Control structures
+if_statement: "if" "(" expression ")" block ["else" (if_statement | block)]
+try_catch_statement: "try" block "catch" "(" PARAM_IDENTIFIER ":" type ")" block
+throw_statement: "throw" expression ";"
+return_statement: "return" expression ";"
+
+// Block
+block: "{" statement* "}"
+
+// Class body
+class_body: (method_declaration | data_declaration)*
+
+// Method declaration
+method_declaration: decorator* IDENTIFIER "(" [parameter_list] ")" [":" type] block
+
+// Trait body
+trait_body: (method_signature)*
+
+// Method signature (for traits)
+method_signature: IDENTIFIER "(" [parameter_list] ")" [":" type] ";"
+
+// Data declaration
+data_declaration: decorator* IDENTIFIER ":" type ["=" expression] ";"
+
+// Decorators
+decorator: "@" IDENTIFIER ["(" [argument_list] ")"]
+
+// Literals
+literal: INTEGER
+       | UINTEGER
+       | HEX_INTEGER
+       | BINARY_INTEGER
+       | STRING
+       | BOOLEAN
+       | PRINCIPAL
+       | list_literal
+       | tuple_literal
+
+INTEGER: /-?[0-9]+/
+UINTEGER: /[0-9]+u/
+HEX_INTEGER: /0x[0-9a-fA-F]+/
+BINARY_INTEGER: /0b[01]+/
+STRING: /".*?"/
+BOOLEAN: "true" | "false"
+PRINCIPAL: /'SP[A-Z0-9]+'/
+list_literal: "[" [expression ("," expression)*] "]"
+tuple_literal: "{" [PARAM_IDENTIFIER ":" expression ("," PARAM_IDENTIFIER ":" expression)*] "}"
+
+// Identifiers
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+PARAM_IDENTIFIER: IDENTIFIER
+
+// Ignore whitespace and comments
+%import common.WS
+%ignore WS
+COMMENT: /\/\/[^\n]*/
+         | /\/\*(.|\n)*?\*\//
+%ignore COMMENT

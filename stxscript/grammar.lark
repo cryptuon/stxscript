@@ -1,148 +1,126 @@
-start: program
+// StxScript Lark Grammar
 
-program: statement*
+// Root rule
+start: (statement | function_declaration | class_declaration)*
 
-statement: function_declaration
-         | variable_declaration
+// Statements
+statement: variable_declaration
          | constant_declaration
-         | map_declaration
-         | asset_declaration
-         | trait_declaration
          | expression_statement
          | if_statement
          | try_catch_statement
          | throw_statement
          | return_statement
-         | import_declaration
-         | export_declaration
 
-function_declaration: decorator* "function" IDENTIFIER "(" parameters? ")" (":" type)? block
+// Declarations
+variable_declaration: decorator* "let" IDENTIFIER [":" type] "=" expression ";"
+constant_declaration: "const" IDENTIFIER [":" type] "=" expression ";"
+function_declaration: decorator* "function" IDENTIFIER "(" [parameter_list] ")" [":" type] block
+class_declaration: decorator* "class" IDENTIFIER ["implements" IDENTIFIER ("," IDENTIFIER)*] "{" class_body "}"
 
-variable_declaration: "let" IDENTIFIER (":" type)? "=" expression ";"
-
-constant_declaration: "const" IDENTIFIER (":" type)? "=" expression ";"
-
-map_declaration: "@map" "(" "{" "key" ":" type "," "value" ":" type "}" ")" "const" IDENTIFIER "=" "new" "Map" "<" type "," type ">" "(" ")" ";"
-
-asset_declaration: "@asset" "class" IDENTIFIER "{" (IDENTIFIER ":" type ";")* "}"
-
-trait_declaration: "trait" IDENTIFIER "{" function_signature* "}"
-
-function_signature: IDENTIFIER "(" parameters? ")" ":" type ";"
-
+// Expression statement
 expression_statement: expression ";"
 
-if_statement: "if" "(" expression ")" block ("else" "if" "(" expression ")" block)* ("else" block)?
-
-try_catch_statement: "try" block "catch" "(" IDENTIFIER ")" block
-
-throw_statement: "throw" expression ";"
-
-return_statement: "return" expression? ";"
-
-import_declaration: "import" "{" IDENTIFIER ("," IDENTIFIER)* "}" "from" STRING ";"
-
-export_declaration: "export" (function_declaration | variable_declaration | constant_declaration)
-
-expression: assignment_expression
-          | list_comprehension
-          | lambda_expression
-
-assignment_expression: conditional_expression ("=" assignment_expression)?
-
-conditional_expression: logical_or_expression ("?" expression ":" conditional_expression)?
-
-logical_or_expression: logical_and_expression ("||" logical_and_expression)*
-
-logical_and_expression: bitwise_or_expression ("&&" bitwise_or_expression)*
-
-bitwise_or_expression: bitwise_xor_expression ("|" bitwise_xor_expression)*
-
-bitwise_xor_expression: bitwise_and_expression ("^" bitwise_and_expression)*
-
-bitwise_and_expression: equality_expression ("&" equality_expression)*
-
-equality_expression: relational_expression (("==" | "!=") relational_expression)*
-
-relational_expression: shift_expression (("<" | ">" | "<=" | ">=") shift_expression)*
-
-shift_expression: additive_expression (("<<" | ">>") additive_expression)*
-
-additive_expression: multiplicative_expression (("+" | "-") multiplicative_expression)*
-
-multiplicative_expression: unary_expression (("*" | "/" | "%") unary_expression)*
-
-unary_expression: ("+" | "-" | "!" | "~")* postfix_expression
-
-postfix_expression: primary_expression (call_expression | member_expression | is_expression | as_expression)*
-
-primary_expression: IDENTIFIER
-                  | literal
-                  | "(" expression ")"
-                  | array_or_list_literal
-                  | object_or_tuple_literal
-
-call_expression: "(" arguments? ")"
-
-member_expression: "." IDENTIFIER
-
-is_expression: "is" type
-
-as_expression: "as" type
-
-array_or_list_literal: "[" (expression ("," expression)*)? "]"
-
-object_or_tuple_literal: "{" (object_or_tuple_item ("," object_or_tuple_item)*)? "}"
-
-object_or_tuple_item: (IDENTIFIER | STRING) ":" expression
-
-arguments: expression ("," expression)*
-
-parameters: parameter ("," parameter)*
-
+// Function-related
+parameter_list: parameter ("," parameter)*
 parameter: IDENTIFIER ":" type
+lambda_function: "(" [parameter_list] ")" "=>" (expression | block)
 
-lambda_expression: "(" parameters ")" "=>" expression
+// Types
+type: "int" | "uint" | "boolean" | "string" | "buffer" | "principal" | "trait"
+    | "list" "<" type ">"
+    | "optional" "<" type ">"
+    | "{" [tuple_type_list] "}"
+    | "Response" "<" type "," type ">"
+    | "Map" "<" type "," type ">"
 
+tuple_type_list: IDENTIFIER ":" type ("," IDENTIFIER ":" type)*
+
+// Expressions
+expression: literal
+          | IDENTIFIER
+          | binary_operation
+          | unary_operation
+          | function_call
+          | member_access
+          | array_access
+          | lambda_function
+          | "(" expression ")"
+          | ternary_operation
+          | type_assertion
+          | type_check
+          | optional_none
+          | optional_some
+          | unwrap_expression
+          | ok_expression
+          | err_expression
+          | new_expression
+
+binary_operation: expression operator expression
+unary_operation: operator expression
+
+operator: "+" | "-" | "*" | "/" | "%" | "==" | "!=" | "<" | ">" | "<=" | ">=" | "&&" | "||" | "&" | "|" | "^" | "<<" | ">>" | "??" | "=" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>="
+
+ternary_operation: expression "?" expression ":" expression
+
+function_call: (IDENTIFIER | member_access) "(" [argument_list] ")"
+argument_list: (named_argument | expression) ("," (named_argument | expression))*
+named_argument: IDENTIFIER ":" expression
+
+member_access: expression "." IDENTIFIER
+
+array_access: expression "[" expression "]"
+
+type_assertion: expression "as" type
+type_check: expression "is" type
+
+optional_none: "none" "(" ")"
+optional_some: "some" "(" expression ")"
+unwrap_expression: expression "!"
+
+ok_expression: "ok" "(" expression ")"
+err_expression: "err" "(" expression ")"
+
+new_expression: "new" type "(" [argument_list] ")"
+
+// Control structures
+if_statement: "if" "(" expression ")" block ["else" (if_statement | block)]
+try_catch_statement: "try" block "catch" "(" IDENTIFIER ":" type ")" block
+throw_statement: "throw" expression ";"
+return_statement: "return" expression ";"
+
+// Block
 block: "{" statement* "}"
 
-type: IDENTIFIER
-    | list_type
-    | tuple_type
-    | optional_type
-    | response_type
+// Class body
+class_body: (function_declaration | variable_declaration)*
 
-list_type: "list" "<" type ">"
+// Decorators
+decorator: "@" IDENTIFIER ["(" [argument_list] ")"]
 
-tuple_type: "{" tuple_type_item ("," tuple_type_item)* "}"
+// Literals
+literal: INTEGER
+       | UINTEGER
+       | STRING
+       | BOOLEAN
+       | PRINCIPAL
+       | list_literal
+       | tuple_literal
 
-tuple_type_item: IDENTIFIER ":" type
-
-optional_type: "optional" "<" type ">"
-
-response_type: "Response" "<" type "," type ">"
-
-list_comprehension: "[" expression "for" IDENTIFIER "in" expression ("if" expression)? "]"
-
-literal: NUMBER | STRING | BOOLEAN | optional_literal | PRINCIPAL
-
-decorator: "@" (PUBLIC | READABLE | PRIVATE | MEMO)
-
-PUBLIC: "public"
-READABLE: "readable"
-PRIVATE: "private"
-MEMO: "memo"
-
-NUMBER: /0x[0-9a-fA-F]+/ | /0b[01]+/ | /[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?/
-STRING: /"[^"]*"/ | /'[^']*'/
+INTEGER: /-?[0-9]+/
+UINTEGER: /[0-9]+u/
+STRING: /".*?"/
 BOOLEAN: "true" | "false"
-PRINCIPAL: /'[a-zA-Z0-9._-]+'/
+PRINCIPAL: /'SP[A-Z0-9]+'/
+list_literal: "[" [expression ("," expression)*] "]"
+tuple_literal: "{" [IDENTIFIER ":" expression ("," IDENTIFIER ":" expression)*] "}"
+
+// Identifier
 IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
 
-optional_literal: "some" "(" expression ")" | "none" "(" ")"
-
-COMMENT: /\/\/.*/ | /\/\*(.|\n)*?\*\//
-
+// Ignore whitespace and comments
 %import common.WS
 %ignore WS
+COMMENT: /\/\/[^\n]*/
+         | /\/\*(.|\n)*?\*\//
 %ignore COMMENT
