@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/cryptuon/stxscript/tree/main/docs
+    about: Check our comprehensive documentation for guides and examples
+  - name: 🗺️ Development Roadmap
+    url: https://github.com/cryptuon/stxscript/blob/main/docs/roadmap.md
+    about: See our planned features and development timeline
+  - name: 💬 GitHub Discussions
+    url: https://github.com/cryptuon/stxscript/discussions
+    about: Ask questions, share ideas, and discuss StxScript with the community
+  - name: 🤝 Contributing Guide
+    url: https://github.com/cryptuon/stxscript/blob/main/docs/contributing.md
+    about: Learn how to contribute to StxScript development

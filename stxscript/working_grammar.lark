@@ -1,0 +1,179 @@
+// StxScript Working Grammar - Simplified to avoid conflicts
+
+// Literals and Tokens - defined first for priority
+UINTEGER.2: /[0-9]+u/
+INTEGER.1: /-?[0-9]+/
+STRING: /".*?"/
+BOOLEAN: "true" | "false"
+
+// Type tokens
+INT_TYPE: "int"
+UINT_TYPE: "uint"
+BOOLEAN_TYPE: "boolean"
+STRING_TYPE: "string"
+BUFFER_TYPE: "buffer"
+PRINCIPAL_TYPE: "principal"
+
+// Special keywords (must come before IDENTIFIER)
+UNWRAP.3: "unwrap!"
+TRY.3: "try!"
+MAP.3: "map"
+
+// Identifier (must come after keywords)
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+
+// Root rule
+start: (statement | function_declaration | trait_declaration)*
+
+// Statements
+statement: variable_declaration
+         | constant_declaration
+         | assignment_statement
+         | return_statement
+         | if_statement
+         | map_declaration
+         | map_operation
+         | import_statement
+         | export_statement
+         | expression_statement
+
+// Declarations
+variable_declaration: "let" IDENTIFIER ":" type "=" expression ";"
+                    | "let" IDENTIFIER "=" expression ";"
+constant_declaration: "const" IDENTIFIER [":" type] "=" expression ";"
+map_declaration: MAP IDENTIFIER "<" type "," type ">" ";"
+map_operation: map_insert | map_update | map_delete
+map_insert: IDENTIFIER ".insert" "(" expression "," expression ")" ";"
+map_update: IDENTIFIER ".update" "(" expression "," expression ")" ";"
+map_delete: IDENTIFIER ".delete" "(" expression ")" ";"
+
+import_statement: "import" "{" import_list "}" "from" STRING ";"
+import_list: IDENTIFIER ("," IDENTIFIER)*
+export_statement: "export" (function_declaration | variable_declaration | constant_declaration | map_declaration)
+
+function_declaration: decorator* "function" IDENTIFIER "(" [parameter_list] ")" [":" type] block
+
+trait_declaration: "trait" IDENTIFIER "{" trait_method* "}"
+trait_method: IDENTIFIER "(" [parameter_list] ")" [":" type] ";"
+
+// Expression statement
+expression_statement: expression ";"
+
+// Assignment statement
+assignment_statement: IDENTIFIER "=" expression ";"
+
+// Return statement
+return_statement: "return" [expression] ";"
+
+// Control flow statements
+if_statement: "if" "(" expression ")" block ["else" (if_statement | block)]
+match_expression: "match" expression "{" match_arm+ "}"
+match_arm: pattern "=>" expression ";"
+pattern: IDENTIFIER | literal | "_"
+
+let_expression: "let" "{" let_binding+ "}" "in" expression
+let_binding: IDENTIFIER "=" expression ";"
+
+unwrap_expression: UNWRAP "(" expression ")"
+try_expression: TRY "(" expression ")"
+
+list_literal: "[" [expression ("," expression)*] "]"
+list_index: IDENTIFIER "[" expression "]"
+
+tuple_literal: "{" [tuple_field ("," tuple_field)*] "}"
+tuple_field: IDENTIFIER ":" expression
+tuple_access: IDENTIFIER "." IDENTIFIER
+
+some_expression: "some" "(" expression ")"
+none_expression: "none" "()"
+
+ok_expression: "ok" "(" expression ")"
+err_expression: "err" "(" expression ")"
+
+lambda_expression: lambda_signature "=>" expression
+lambda_signature: "(" [IDENTIFIER ("," IDENTIFIER)*] ")"
+
+
+// Function-related
+parameter_list: parameter ("," parameter)*
+parameter: IDENTIFIER ":" type
+
+// Types
+type: INT_TYPE | UINT_TYPE | BOOLEAN_TYPE | STRING_TYPE | BUFFER_TYPE | PRINCIPAL_TYPE
+    | "Response" "<" type "," type ">"
+
+// Expressions with precedence (lowest to highest)
+expression: logical_or
+
+?logical_or: logical_and (OR_OP logical_and)*
+
+?logical_and: equality (AND_OP equality)*
+
+?equality: comparison (EQ_OP comparison)*
+
+?comparison: addition (COMP_OP addition)*
+
+?addition: multiplication (ADD_OP multiplication)*
+
+?multiplication: unary (MUL_OP unary)*
+
+OR_OP: "||"
+AND_OP: "&&"
+EQ_OP: "==" | "!="
+COMP_OP: "<" | ">" | "<=" | ">="
+ADD_OP: "+" | "-"
+MUL_OP: "*" | "/" | "%"
+
+unary: UNARY_OP unary | power
+
+UNARY_OP: "!" | "-" | "+"
+
+power: atom (POW_OP unary)?
+
+POW_OP: "**"
+
+atom: literal
+    | IDENTIFIER
+    | function_call
+    | match_expression
+    | let_expression
+    | unwrap_expression
+    | try_expression
+    | list_literal
+    | list_index
+    | tuple_literal
+    | tuple_access
+    | some_expression
+    | none_expression
+    | ok_expression
+    | err_expression
+    | lambda_expression
+    | "(" expression ")"
+
+function_call: IDENTIFIER "(" [argument_list] ")"
+argument_list: expression ("," expression)*
+
+// Block - only used for function bodies
+block: "{" statement* "}"
+
+// Decorators
+decorator: "@" IDENTIFIER
+
+// Literals
+literal: INTEGER
+       | UINTEGER
+       | STRING
+       | BOOLEAN
+
+
+// Comments
+SINGLE_LINE_COMMENT: "//" /[^\n]*/
+DOC_COMMENT: "///" /[^\n]*/
+MULTI_LINE_COMMENT: "/*" /.*?/ "*/"
+
+// Ignore whitespace and comments
+%import common.WS
+%ignore WS
+%ignore SINGLE_LINE_COMMENT
+%ignore DOC_COMMENT
+%ignore MULTI_LINE_COMMENT

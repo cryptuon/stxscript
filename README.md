@@ -1,252 +1,172 @@
-# StxScript: Making stacks(STX) development easy (Clarity)
+# StxScript
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Versions](https://img.shields.io/pypi/pyversions/stxscript.svg)](https://pypi.org/project/stxscript/)
+[![Python](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Development Status](https://img.shields.io/badge/status-alpha-orange.svg)](https://github.com/cryptuon/stxscript)
 
-[EXPERIMENTAL] : Under active development.
+> A TypeScript-inspired transpiler for writing Stacks blockchain smart contracts
 
-StxScript is a high-level language and transpiler for writing smart contracts on the Stacks blockchain. It provides a more familiar and expressive syntax compared to Clarity, while still compiling down to valid Clarity code.
+StxScript provides a familiar, expressive syntax for writing Clarity smart contracts on the Stacks blockchain. Write code that looks like TypeScript, compile to optimized Clarity.
 
-## Table of Contents
+## 🚀 Quick Start
 
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Command Line Interface](#command-line-interface)
-  - [Python API](#python-api)
-- [Language Overview](#language-overview)
-  - [Basic Types](#basic-types)
-  - [Variables and Constants](#variables-and-constants)
-  - [Functions](#functions)
-  - [Control Structures](#control-structures)
-  - [Error Handling](#error-handling)
-  - [Clarity-specific Features](#clarity-specific-features)
-  - [Advanced Features](#advanced-features)
-- [Examples](#examples)
-- [Development](#development)
-  - [Setting Up the Development Environment](#setting-up-the-development-environment)
-  - [Running Tests](#running-tests)
-- [Contributing](#contributing)
-- [License](#license)
+```bash
+# Install StxScript
+pip install stxscript
 
-## Features
+# Create a simple contract
+echo 'let balance: uint = 1000u;' > example.stx
 
-- Familiar syntax inspired by modern programming languages
-- Static typing with type inference
-- First-class support for Clarity concepts like traits, maps, and assets
-- Enhanced readability and maintainability compared to raw Clarity code
-- Comprehensive error messages and static analysis
-- Support for complex data structures and operations
-- Built-in support for common smart contract patterns
+# Transpile to Clarity
+stxscript example.stx example.clar
+```
 
-## Installation
+## ✨ Features
 
-You can install StxScript using pip:
+- **Familiar Syntax**: TypeScript-inspired syntax for Clarity development
+- **Type Safety**: Static typing with type inference
+- **Zero Runtime**: Compiles to native Clarity with no overhead
+- **Developer Friendly**: Clear error messages and helpful tooling
+
+## 📦 Installation
+
+### Using pip
 
 ```bash
 pip install stxscript
 ```
 
-For development, we recommend using Poetry:
+### Using Poetry (Development)
 
 ```bash
-poetry add stxscript
+git clone https://github.com/cryptuon/stxscript.git
+cd stxscript
+poetry install
+poetry shell
 ```
 
-## Usage
+## 🛠️ Usage
 
-### Command Line Interface
-
-After installation, you can use the `stxscript` command to transpile StxScript files to Clarity:
+### Command Line
 
 ```bash
+# Basic transpilation
 stxscript input.stx output.clar
+
+# Multiple files
+stxscript src/*.stx --output-dir build/
 ```
 
 ### Python API
-
-You can also use StxScript as a library in your Python projects:
 
 ```python
 from stxscript import StxScriptTranspiler
 
 transpiler = StxScriptTranspiler()
-clarity_code = transpiler.transpile(stxscript_code)
+clarity_code = transpiler.transpile("""
+let token_name: string = "MyToken";
+const MAX_SUPPLY: uint = 1000000u;
+""")
+print(clarity_code)
 ```
 
-## Language Overview
-
-### Basic Types
-
-StxScript supports all Clarity types:
-
-- `int`: Signed 128-bit integer
-- `uint`: Unsigned 128-bit integer
-- `bool`: Boolean (true or false)
-- `principal`: Stacks address or contract identifier
-- `string`: UTF-8 string
-- `buffer`: Byte buffer
-- `list<T>`: List of elements of type T
-- `optional<T>`: Optional value of type T
-- `Response<T, E>`: Response type with ok (T) and error (E) variants
-- `tuple`: Named fields of varying types
+## 📝 Language Features
 
 ### Variables and Constants
 
 ```typescript
-let myVariable: int = 42;
-const MY_CONSTANT: uint = 100;
+// Variables with type annotations
+let balance: uint = 1000u;
+let name: string = "Alice";
+
+// Type inference
+let count = 42;  // inferred as uint
+
+// Constants
+const MAX_SUPPLY: uint = 1000000u;
 ```
 
 ### Functions
 
 ```typescript
 @public
-function add(a: int, b: int): int {
-    return a + b;
-}
-```
-
-### Control Structures
-
-```typescript
-if (condition) {
-    // do something
-} else if (otherCondition) {
-    // do something else
-} else {
-    // fallback
-}
-
-// List operations
-let doubled = map([1, 2, 3], (x) => x * 2);
-let evens = filter([1, 2, 3, 4], (x) => x % 2 == 0);
-let sum = fold([1, 2, 3, 4], 0, (acc, x) => acc + x);
-```
-
-### Error Handling
-
-```typescript
-try {
-    // code that might throw an error
-} catch (error) {
-    // handle error
-}
-
-throw "Custom error message";
-```
-
-### Clarity-specific Features
-
-```typescript
-// Traits
-trait Token {
-    transfer(from: principal, to: principal, amount: uint): Response<bool, uint>;
-    getBalance(account: principal): Response<uint, uint>;
-}
-
-// Maps
-@map({ key: principal, value: uint })
-const balances = new Map<principal, uint>();
-
-// Assets
-@asset
-class NFT {
-    id: uint;
-    owner: principal;
-}
-
-// Contract calls
-let result = TokenContract.transfer(sender, recipient, amount);
-```
-
-### Advanced Features
-
-- List comprehensions
-- Type assertions and checks
-- Async operations (where supported by Clarity)
-- Import and export declarations for modular contract development
-
-## Examples
-
-Here's a simple token contract written in StxScript:
-
-```typescript
-@map({ key: principal, value: uint })
-const balances = new Map<principal, uint>();
-
-@public
-function transfer(to: principal, amount: uint): Response<bool, uint> {
-    let sender = tx.sender;
-    let senderBalance = balances.get(sender) ?? 0;
-    
-    if (senderBalance < amount) {
-        return err(1); // Insufficient balance
-    }
-    
-    let recipientBalance = balances.get(to) ?? 0;
-    balances.set(sender, senderBalance - amount);
-    balances.set(to, recipientBalance + amount);
-    
-    return ok(true);
+function transfer(to: principal, amount: uint): Response<bool, string> {
+    // Function implementation
 }
 
 @readable
-function getBalance(account: principal): Response<uint, uint> {
-    return ok(balances.get(account) ?? 0);
+function get_balance(account: principal): uint {
+    // Read-only function
 }
 ```
 
-## Development
+### Current Language Support
 
-### Setting Up the Development Environment
+**✅ Implemented:**
+- Variable declarations (`let`, `const`)
+- Basic types (`int`, `uint`, `bool`, `string`, `principal`)
+- Function declarations with decorators
+- Type annotations and inference
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/cryptuon/stxscript.git
-   cd stxscript
-   ```
+**🚧 Coming Soon:**
+- Control flow (`if/else`, loops)
+- Complex expressions and operators
+- Classes, traits, and maps
+- Error handling (`try/catch`)
 
-2. Install Poetry if you haven't already:
-   ```bash
-   curl -sSL https://install.python-poetry.org | python3 -
-   ```
+## 📖 Documentation
 
-3. Install the project dependencies:
-   ```bash
-   poetry install
-   ```
+- [Quick Start Guide](docs/quick-start.md) - Get started in 5 minutes
+- [Installation Guide](docs/installation.md) - Setup instructions
+- [Language Reference](docs/language-reference.md) - Complete syntax guide
+- [API Documentation](docs/api.md) - Python API reference
+- [CLI Reference](docs/cli.md) - Command-line usage
+- [Examples](docs/examples.md) - Real-world code examples
+- [Development Roadmap](docs/roadmap.md) - Feature timeline & milestones
+- [Contributing Guide](docs/contributing.md) - How to contribute
 
-4. Activate the virtual environment:
-   ```bash
-   poetry shell
-   ```
+## 🏗️ Development Status
 
-### Running Tests
+StxScript is currently in **alpha** development. The core transpiler is functional for basic variable and constant declarations. We're actively working on expanding language features.
 
-To run the test suite:
+### Roadmap
 
-```bash
-poetry run python -m unittest stxscript.test_transpiler
-```
+**Current (v0.1.0 - Alpha):**
+- ✅ Core transpiler infrastructure
+- ✅ Basic variable/constant support
+- ✅ Function declarations with decorators
+- ✅ CLI and Python API
 
-To run linting and type checking:
+**Next Major Phases:**
+- 🎯 **Phase 1 (v0.2.0)**: Expression System - Arithmetic, comparisons, function bodies
+- 🎯 **Phase 2 (v0.3.0)**: Control Flow - If/else, match expressions, error handling
+- 🎯 **Phase 3 (v0.4.0)**: Data Structures - Lists, tuples, maps, optionals
+- 🎯 **Phase 4 (v0.5.0)**: Advanced Features - Lambdas, traits, modules
+- 🎯 **Phase 5 (v1.0.0)**: Developer Experience - IDE support, tooling, formatting
 
-```bash
-poetry run flake8 stxscript
-poetry run mypy stxscript
-```
+📋 **[View Complete Roadmap](docs/roadmap.md)** for detailed timelines and technical plans.
 
-## Contributing
+## 🤝 Contributing
 
-We welcome contributions to StxScript! Please see our [Contributing Guide](CONTRIBUTING.md) for more details on how to get started.
+We welcome contributions! Please see our [Contributing Guide](docs/contributing.md) for details.
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-## License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Links
+
+- [Stacks Blockchain](https://www.stacks.co/)
+- [Clarity Language](https://docs.stacks.co/docs/clarity/)
+- [GitHub Issues](https://github.com/cryptuon/stxscript/issues)
+- [Documentation](docs/)
+
+---
+
+**Note**: StxScript is experimental software. Use in production at your own risk.

@@ -1,0 +1,121 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please check our [roadmap](https://github.com/cryptuon/stxscript/blob/main/docs/roadmap.md) first to see if it's already planned.
+
+  - type: dropdown
+    id: roadmap-phase
+    attributes:
+      label: Roadmap Phase
+      description: Which phase of our roadmap does this feature align with?
+      options:
+        - "Phase 1: Expression System (v0.2.0)"
+        - "Phase 2: Control Flow (v0.3.0)"
+        - "Phase 3: Data Structures (v0.4.0)"
+        - "Phase 4: Advanced Features (v0.5.0)"
+        - "Phase 5: Developer Experience (v1.0.0)"
+        - "Future/Not in roadmap"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem would this feature solve?
+      placeholder: "I'm trying to do X but currently I have to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature you'd like to see
+      placeholder: "I would like to be able to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: syntax-example
+    attributes:
+      label: Proposed Syntax
+      description: How would this feature look in StxScript code?
+      render: typescript
+      placeholder: |
+        // Example of how the feature would be used
+        let example = new_feature_syntax();
+    validations:
+      required: false
+
+  - type: textarea
+    id: clarity-output
+    attributes:
+      label: Expected Clarity Output
+      description: What Clarity code should this generate?
+      render: lisp
+      placeholder: |
+        ;; Expected Clarity output
+        (define-data-var example ...)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - "Critical - Blocking my project"
+        - "High - Would significantly improve my workflow"
+        - "Medium - Would be nice to have"
+        - "Low - Minor convenience"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature would be to implement?
+      options:
+        - "Low - Simple grammar/transformer change"
+        - "Medium - Requires moderate changes"
+        - "High - Significant design work needed"
+        - "Unknown - Not sure"
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternatives have you considered?
+      placeholder: "I could work around this by..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be interested in contributing to this feature?
+      options:
+        - label: I would like to implement this feature myself
+        - label: I can help with testing this feature
+        - label: I can help with documentation for this feature
+        - label: I can provide additional use cases and examples
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context or screenshots about the feature request
+      placeholder: Any additional information that might be helpful...
+    validations:
+      required: false

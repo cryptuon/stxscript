@@ -1,0 +1,124 @@
+name: Roadmap Item Implementation
+description: Track implementation of a specific roadmap item
+title: "[Roadmap]: "
+labels: ["roadmap", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is for tracking implementation of specific items from our [development roadmap](https://github.com/cryptuon/stxscript/blob/main/docs/roadmap.md).
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Roadmap Phase
+      description: Which phase is this item from?
+      options:
+        - "Phase 1: Expression System (v0.2.0)"
+        - "Phase 2: Control Flow (v0.3.0)"
+        - "Phase 3: Data Structures (v0.4.0)"
+        - "Phase 4: Advanced Features (v0.5.0)"
+        - "Phase 5: Developer Experience (v1.0.0)"
+    validations:
+      required: true
+
+  - type: input
+    id: roadmap-item
+    attributes:
+      label: Roadmap Item
+      description: What specific item from the roadmap is this?
+      placeholder: "Arithmetic expressions, If/else statements, Map operations, etc."
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Implementation Description
+      description: Detailed description of what needs to be implemented
+      placeholder: "This involves implementing..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-tasks
+    attributes:
+      label: Technical Tasks
+      description: Break down the implementation into specific technical tasks
+      placeholder: |
+        - [ ] Add grammar rules for X
+        - [ ] Implement transformer methods for Y
+        - [ ] Add test cases for Z
+        - [ ] Update documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example Code
+      description: Examples of what should work after implementation
+      render: typescript
+      placeholder: |
+        // Examples of syntax that should work
+        let result = a + b * c;
+    validations:
+      required: false
+
+  - type: textarea
+    id: clarity-output
+    attributes:
+      label: Expected Clarity Output
+      description: What Clarity code should be generated
+      render: lisp
+      placeholder: |
+        ;; Expected Clarity output
+        (define-data-var result uint (+ a (* b c)))
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: What other roadmap items or features does this depend on?
+      placeholder: "This requires X to be implemented first..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: success-criteria
+    attributes:
+      label: Success Criteria
+      description: How will we know this is complete and working correctly?
+      placeholder: |
+        - [ ] All listed technical tasks are complete
+        - [ ] Test coverage is >90%
+        - [ ] Examples in documentation work
+        - [ ] Generated Clarity is valid
+    validations:
+      required: true
+
+  - type: dropdown
+    id: estimated-effort
+    attributes:
+      label: Estimated Effort
+      description: How much effort do you estimate this will take?
+      options:
+        - "Small (1-3 days)"
+        - "Medium (1-2 weeks)"
+        - "Large (3-4 weeks)"
+        - "Extra Large (1+ months)"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution-interest
+    attributes:
+      label: Contribution Interest
+      description: Are you interested in working on this?
+      options:
+        - label: I would like to implement this myself
+        - label: I can help with implementation
+        - label: I can help with testing
+        - label: I can help with documentation

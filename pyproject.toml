@@ -2,7 +2,7 @@
 name = "stxscript"
 version = "0.1.0"
 description = "A transpiler for StxScript to Clarity"
-authors = ["Dipankar Sarkar<me@dipankar.name>"]
+authors = ["Dipankar Sarkar <me@dipankar.name>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/cryptuon/stxscript"
@@ -13,6 +13,7 @@ keywords = ["stacks", "clarity", "blockchain", "smart-contracts", "transpiler"]
 [tool.poetry.dependencies]
 python = "^3.7"
 lark = "^1.1.5"
+watchdog = "^2.1.9"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
