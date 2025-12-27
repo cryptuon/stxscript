@@ -4,8 +4,8 @@ This guide will help you install StxScript and get your development environment 
 
 ## Requirements
 
-- Python 3.7 or higher
-- pip or Poetry (for package management)
+- Python 3.10 or higher
+- uv (recommended) or pip for package management
 
 ## Installation Methods
 
@@ -26,12 +26,11 @@ For development or to get the latest features:
 git clone https://github.com/cryptuon/stxscript.git
 cd stxscript
 
-# Install with Poetry (recommended for development)
-poetry install
-poetry shell
+# Install with uv (recommended for development)
+uv venv && uv pip install -e ".[dev]"
 
 # Or install with pip
-pip install -e .
+pip install -e ".[dev]"
 ```
 
 ## Verify Installation
@@ -42,12 +41,14 @@ After installation, verify that StxScript is working correctly:
 # Check the version
 stxscript --version
 
+# Should output: StxScript 0.3.0 (Phase 10: Ecosystem & Tooling)
+
 # Test basic transpilation
-echo 'let test: uint = 42u;' | stxscript
+echo 'let test: uint = 42u;' | stxscript build -
 ```
 
 You should see output similar to:
-```
+```lisp
 (define-data-var test uint u42)
 ```
 
@@ -55,10 +56,11 @@ You should see output similar to:
 
 If you're planning to contribute to StxScript, set up the development environment:
 
-### 1. Install Poetry
+### 1. Install uv
 
 ```bash
-curl -sSL https://install.python-poetry.org | python3 -
+# Install uv (fast Python package installer)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 ### 2. Clone and Setup
@@ -66,38 +68,49 @@ curl -sSL https://install.python-poetry.org | python3 -
 ```bash
 git clone https://github.com/cryptuon/stxscript.git
 cd stxscript
-poetry install
-poetry shell
+uv venv && uv pip install -e ".[dev]"
 ```
 
-### 3. Install Development Dependencies
-
-```bash
-poetry install --extras dev
-```
-
-### 4. Run Tests
+### 3. Run Tests
 
 ```bash
 # Run the test suite
-poetry run python -m pytest
+uv run python -m pytest tests/
+
+# Run with coverage
+uv run python -m pytest tests/ --cov=stxscript
 
 # Run specific test
-poetry run python -m unittest stxscript.test_transpiler
+uv run python -m pytest tests/test_transpiler.py -v
 
 # Run linting
-poetry run flake8 stxscript
-poetry run mypy stxscript
+uv run flake8 stxscript
+uv run mypy stxscript
 ```
 
 ## IDE Setup
 
-### VS Code
+### VS Code (Recommended)
 
-Install the following extensions for better StxScript development:
+Install the StxScript VS Code extension for the best development experience:
 
-1. **Python** - Microsoft's Python extension
-2. **Clarity** - Stacks blockchain Clarity language support
+1. Install the extension from the `vscode-extension/` directory
+2. The extension provides:
+   - Syntax highlighting for `.stx` files
+   - Real-time error reporting
+   - Autocomplete for keywords, types, and symbols
+   - Go to definition
+   - Hover information
+   - Code snippets
+
+**To install the extension locally:**
+
+```bash
+cd vscode-extension
+npm install
+npm run compile
+# Then open the extension folder in VS Code and press F5 to run
+```
 
 ### Vim/Neovim
 
@@ -122,7 +135,20 @@ my-stacks-project/
 ├── build/
 │   └── contracts/
 ├── tests/
-└── stxscript.config.json
+├── stxscript.toml        # Package manifest
+└── stxscript.lock        # Lock file
+```
+
+## Initialize a New Project
+
+Use the package manager to initialize a new project:
+
+```bash
+# Initialize a new StxScript project
+stxscript pkg init --name my-project
+
+# Or create from a template
+stxscript new my-project --template token
 ```
 
 ## Environment Variables
@@ -139,8 +165,8 @@ StxScript respects these environment variables:
 
 **ImportError: No module named 'lark'**
 ```bash
-# Make sure lark is installed
-pip install lark
+# Make sure all dependencies are installed
+uv pip install -e ".[dev]"
 ```
 
 **Command not found: stxscript**

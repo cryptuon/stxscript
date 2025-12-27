@@ -1,8 +1,8 @@
 # StxScript Documentation
 
-Welcome to the StxScript documentation! This directory contains comprehensive guides and references for using StxScript to build Stacks blockchain smart contracts.
+Welcome to the StxScript documentation! StxScript is a TypeScript-inspired transpiler for Stacks blockchain smart contracts, now production-ready at version 0.3.0.
 
-## 📚 Documentation Index
+## Documentation Index
 
 ### Getting Started
 - [Installation Guide](installation.md) - How to install and set up StxScript
@@ -11,36 +11,51 @@ Welcome to the StxScript documentation! This directory contains comprehensive gu
 
 ### Language Reference
 - [Language Reference](language-reference.md) - Complete language syntax and features
-- [Type System](types.md) - Understanding StxScript's type system
-- [Functions](functions.md) - Function declarations and usage
+- [CLI Reference](cli.md) - Command-line interface guide
 
 ### API & Tools
 - [API Documentation](api.md) - Python API reference
-- [CLI Reference](cli.md) - Command-line interface guide
-- [Configuration](configuration.md) - Project and transpiler configuration
+- [Testing Framework](testing.md) - Contract testing with mocks
+- [Package Manager](package-manager.md) - Dependency management
+
+### IDE Support
+- [VS Code Extension](ide-setup.md) - Full IDE integration with LSP
 
 ### Development
 - [Contributing](contributing.md) - How to contribute to StxScript
-- [Architecture](architecture.md) - Internal project structure
-- [Testing](testing.md) - Running and writing tests
-
-### Project Planning
 - [Development Roadmap](roadmap.md) - Feature timeline and milestones
-- [GitHub Project Structure](https://github.com/cryptuon/stxscript/projects) - Track development progress
 
-### Advanced Topics
-- [Clarity Integration](clarity-integration.md) - How StxScript maps to Clarity (coming soon)
-- [Performance](performance.md) - Optimization tips and best practices (coming soon)
-- [Migration Guide](migration.md) - Migrating from other languages (coming soon)
+## Current Features (v0.3.0)
 
-## 🚀 Quick Links
+### Language Features
+- Variables and constants with type inference
+- Functions with decorators (`@public`, `@readonly`)
+- Control flow (if/else, match expressions)
+- Loops (for, while)
+- Data structures (lists, tuples, maps, optionals)
+- Generic types and type aliases
+- Lambda expressions
+- Traits and interfaces
+- Import/export system
+
+### Developer Tools
+- **CLI**: Modern subcommand interface with watch mode
+- **Formatter**: AST-based code formatting
+- **Linter**: Static analysis with security rules
+- **LSP Server**: Full language server for IDE integration
+- **VS Code Extension**: Syntax highlighting, autocomplete, go to definition
+- **Testing Framework**: Contract testing with mock blockchain
+- **Package Manager**: Dependency management with semantic versioning
+- **Documentation Generator**: Auto-generate HTML/Markdown docs
+
+## Quick Links
 
 - **New to StxScript?** Start with the [Installation Guide](installation.md)
 - **Want examples?** Check out [Examples](examples.md)
 - **Need API docs?** See [API Documentation](api.md)
 - **Want to contribute?** Read [Contributing](contributing.md)
 
-## 📝 Contributing to Documentation
+## Contributing to Documentation
 
 Found an error or want to improve the docs? We welcome contributions!
 

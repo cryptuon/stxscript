@@ -1,0 +1,188 @@
+{
+  "Public Function": {
+    "prefix": "pubfn",
+    "body": [
+      "@public",
+      "function ${1:name}(${2:params}): ${3:returnType} {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "Create a public function"
+  },
+  "Private Function": {
+    "prefix": "fn",
+    "body": [
+      "function ${1:name}(${2:params}): ${3:returnType} {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "Create a private function"
+  },
+  "Read-Only Function": {
+    "prefix": "rofn",
+    "body": [
+      "@readonly",
+      "function ${1:name}(${2:params}): ${3:returnType} {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "Create a read-only function"
+  },
+  "Variable Declaration": {
+    "prefix": "let",
+    "body": [
+      "let ${1:name}: ${2:type} = ${3:value};"
+    ],
+    "description": "Declare a variable"
+  },
+  "Constant Declaration": {
+    "prefix": "const",
+    "body": [
+      "const ${1:NAME}: ${2:type} = ${3:value};"
+    ],
+    "description": "Declare a constant"
+  },
+  "Map Declaration": {
+    "prefix": "map",
+    "body": [
+      "map ${1:name}<${2:keyType}, ${3:valueType}>;"
+    ],
+    "description": "Declare a map"
+  },
+  "Type Alias": {
+    "prefix": "type",
+    "body": [
+      "type ${1:Name} = ${2:type};"
+    ],
+    "description": "Create a type alias"
+  },
+  "Trait Declaration": {
+    "prefix": "trait",
+    "body": [
+      "trait ${1:Name} {",
+      "\t${2:method}(${3:params}): ${4:returnType};",
+      "}"
+    ],
+    "description": "Declare a trait"
+  },
+  "If Statement": {
+    "prefix": "if",
+    "body": [
+      "if (${1:condition}) {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "If statement"
+  },
+  "If-Else Statement": {
+    "prefix": "ife",
+    "body": [
+      "if (${1:condition}) {",
+      "\t${2}",
+      "} else {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "If-else statement"
+  },
+  "For Loop": {
+    "prefix": "for",
+    "body": [
+      "for (let ${1:i} = ${2:0}; ${1:i} < ${3:10}; ${1:i} = ${1:i} + 1) {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "For loop"
+  },
+  "While Loop": {
+    "prefix": "while",
+    "body": [
+      "while (${1:condition}) {",
+      "\t${0}",
+      "}"
+    ],
+    "description": "While loop"
+  },
+  "Match Expression": {
+    "prefix": "match",
+    "body": [
+      "match (${1:value}) {",
+      "\t${2:pattern} => ${3:result},",
+      "\t_ => ${0:default}",
+      "}"
+    ],
+    "description": "Match expression"
+  },
+  "Return Statement": {
+    "prefix": "ret",
+    "body": [
+      "return ${1:value};"
+    ],
+    "description": "Return statement"
+  },
+  "Ok Response": {
+    "prefix": "ok",
+    "body": [
+      "ok(${1:value})"
+    ],
+    "description": "Ok response"
+  },
+  "Err Response": {
+    "prefix": "err",
+    "body": [
+      "err(${1:value})"
+    ],
+    "description": "Error response"
+  },
+  "Some Optional": {
+    "prefix": "some",
+    "body": [
+      "some(${1:value})"
+    ],
+    "description": "Some optional value"
+  },
+  "Import Statement": {
+    "prefix": "import",
+    "body": [
+      "import { ${1:items} } from \"${2:module}\";"
+    ],
+    "description": "Import statement"
+  },
+  "Contract Call": {
+    "prefix": "call",
+    "body": [
+      "${1:Contract}.${2:method}(${3:args})"
+    ],
+    "description": "Contract call"
+  },
+  "SIP-010 Token Transfer": {
+    "prefix": "transfer",
+    "body": [
+      "@public",
+      "function transfer(amount: uint, sender: principal, recipient: principal): Response<bool, uint> {",
+      "\t// Ensure sender is tx-sender",
+      "\tif (sender != tx-sender) {",
+      "\t\treturn err(1u);",
+      "\t}",
+      "\t// Transfer logic here",
+      "\treturn ok(true);",
+      "}"
+    ],
+    "description": "SIP-010 compliant transfer function"
+  },
+  "SIP-009 NFT Transfer": {
+    "prefix": "nfttransfer",
+    "body": [
+      "@public",
+      "function transfer(id: uint, sender: principal, recipient: principal): Response<bool, uint> {",
+      "\t// Ensure sender owns the NFT",
+      "\tif (sender != tx-sender) {",
+      "\t\treturn err(1u);",
+      "\t}",
+      "\t// Transfer logic here",
+      "\treturn ok(true);",
+      "}"
+    ],
+    "description": "SIP-009 compliant NFT transfer function"
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "StxScript",
+  "scopeName": "source.stxscript",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#decorators" },
+    { "include": "#functions" },
+    { "include": "#variables" },
+    { "include": "#operators" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.stxscript",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.line.triple-slash.stxscript",
+          "match": "///.*$"
+        },
+        {
+          "name": "comment.block.stxscript",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "captures": {
+            "0": { "name": "punctuation.definition.comment.stxscript" }
+          }
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.stxscript",
+          "begin": "\"",
+          "end": "\"",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.string.begin.stxscript" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.string.end.stxscript" }
+          },
+          "patterns": [
+            {
+              "name": "constant.character.escape.stxscript",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.stxscript",
+          "begin": "'",
+          "end": "'",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.string.begin.stxscript" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.string.end.stxscript" }
+          }
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.uint.stxscript",
+          "match": "\\b[0-9]+u\\b"
+        },
+        {
+          "name": "constant.numeric.hex.stxscript",
+          "match": "\\b0x[0-9a-fA-F]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.stxscript",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.stxscript",
+          "match": "\\b(if|else|match|for|while|return|break|continue)\\b"
+        },
+        {
+          "name": "keyword.declaration.stxscript",
+          "match": "\\b(let|const|function|class|trait|type|map|implements)\\b"
+        },
+        {
+          "name": "keyword.module.stxscript",
+          "match": "\\b(import|export|from)\\b"
+        },
+        {
+          "name": "constant.language.boolean.stxscript",
+          "match": "\\b(true|false)\\b"
+        },
+        {
+          "name": "constant.language.null.stxscript",
+          "match": "\\b(none)\\b"
+        },
+        {
+          "name": "keyword.other.stxscript",
+          "match": "\\b(some|ok|err|try|unwrap)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "support.type.primitive.stxscript",
+          "match": "\\b(int|uint|bool|boolean|string|principal|buffer)\\b"
+        },
+        {
+          "name": "support.type.generic.stxscript",
+          "match": "\\b(list|optional|Response|Map)\\b"
+        },
+        {
+          "name": "entity.name.type.stxscript",
+          "match": "\\b[A-Z][a-zA-Z0-9]*\\b"
+        }
+      ]
+    },
+    "decorators": {
+      "patterns": [
+        {
+          "name": "entity.name.function.decorator.stxscript",
+          "match": "@(public|readonly|private|asset|contract|data|maxIterations)"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.stxscript",
+          "match": "\\b([a-z][a-zA-Z0-9_-]*)(?=\\s*\\()"
+        },
+        {
+          "name": "support.function.builtin.stxscript",
+          "match": "\\b(print|assert|unwrap!|unwrap-err!|unwrap-panic|map-get\\?|map-set|map-insert|map-delete|var-get|var-set|contract-call\\?|as-contract|tx-sender|block-height|stx-get-balance|stx-transfer\\?)\\b"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.parameter.stxscript",
+          "match": "\\b[a-z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.comparison.stxscript",
+          "match": "(==|!=|<=|>=|<|>)"
+        },
+        {
+          "name": "keyword.operator.logical.stxscript",
+          "match": "(&&|\\|\\||!)"
+        },
+        {
+          "name": "keyword.operator.arithmetic.stxscript",
+          "match": "(\\+|-|\\*|/|%|\\*\\*)"
+        },
+        {
+          "name": "keyword.operator.bitwise.stxscript",
+          "match": "(&|\\||\\^|~|<<|>>)"
+        },
+        {
+          "name": "keyword.operator.assignment.stxscript",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.optional.stxscript",
+          "match": "(\\?\\.|\\?\\?)"
+        },
+        {
+          "name": "keyword.operator.arrow.stxscript",
+          "match": "=>"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.comma.stxscript",
+          "match": ","
+        },
+        {
+          "name": "punctuation.terminator.stxscript",
+          "match": ";"
+        },
+        {
+          "name": "punctuation.accessor.stxscript",
+          "match": "\\."
+        },
+        {
+          "name": "punctuation.section.braces.begin.stxscript",
+          "match": "\\{"
+        },
+        {
+          "name": "punctuation.section.braces.end.stxscript",
+          "match": "\\}"
+        },
+        {
+          "name": "punctuation.section.parens.begin.stxscript",
+          "match": "\\("
+        },
+        {
+          "name": "punctuation.section.parens.end.stxscript",
+          "match": "\\)"
+        },
+        {
+          "name": "punctuation.section.brackets.begin.stxscript",
+          "match": "\\["
+        },
+        {
+          "name": "punctuation.section.brackets.end.stxscript",
+          "match": "\\]"
+        },
+        {
+          "name": "punctuation.section.angle.begin.stxscript",
+          "match": "<"
+        },
+        {
+          "name": "punctuation.section.angle.end.stxscript",
+          "match": ">"
+        }
+      ]
+    }
+  }
+}

@@ -36,7 +36,7 @@ For more information, visit: https://github.com/cryptuon/stxscript
     parser.add_argument(
         '--version',
         action='version',
-        version='StxScript 0.1.0 (Phase 5: Developer Experience)'
+        version='StxScript 0.3.0 (Phase 10: Ecosystem & Tooling)'
     )
 
     parser.add_argument(
@@ -107,6 +107,22 @@ For more information, visit: https://github.com/cryptuon/stxscript
         description='Generate documentation from StxScript code'
     )
     setup_doc_parser(doc_parser)
+
+    # Test command
+    test_parser = subparsers.add_parser(
+        'test',
+        help='Run contract tests',
+        description='Run StxScript contract tests'
+    )
+    setup_test_parser(test_parser)
+
+    # Package manager command
+    pkg_parser = subparsers.add_parser(
+        'pkg',
+        help='Package management',
+        description='Manage StxScript packages and dependencies'
+    )
+    setup_pkg_parser(pkg_parser)
 
     return parser
 
@@ -261,6 +277,99 @@ def setup_doc_parser(parser: argparse.ArgumentParser):
     )
 
 
+def setup_test_parser(parser: argparse.ArgumentParser):
+    """Setup the test command parser."""
+    parser.add_argument(
+        'path',
+        nargs='?',
+        default='tests',
+        help='Test directory or file (defaults to tests/)'
+    )
+
+    parser.add_argument(
+        '--pattern',
+        default='test_*.py',
+        help='Test file pattern (default: test_*.py)'
+    )
+
+    parser.add_argument(
+        '--coverage',
+        action='store_true',
+        help='Enable coverage tracking'
+    )
+
+    parser.add_argument(
+        '--json',
+        action='store_true',
+        help='Output results as JSON'
+    )
+
+
+def setup_pkg_parser(parser: argparse.ArgumentParser):
+    """Setup the package manager command parser."""
+    pkg_subparsers = parser.add_subparsers(
+        dest='pkg_command',
+        help='Package manager commands',
+        metavar='PKG_COMMAND'
+    )
+
+    # pkg init
+    init_parser = pkg_subparsers.add_parser(
+        'init',
+        help='Initialize a new package'
+    )
+    init_parser.add_argument(
+        '--name',
+        help='Package name (defaults to directory name)'
+    )
+
+    # pkg add
+    add_parser = pkg_subparsers.add_parser(
+        'add',
+        help='Add a dependency'
+    )
+    add_parser.add_argument(
+        'package',
+        help='Package name to add'
+    )
+    add_parser.add_argument(
+        '--version',
+        help='Version requirement (e.g., ^1.0.0)'
+    )
+    add_parser.add_argument(
+        '--dev',
+        action='store_true',
+        help='Add as development dependency'
+    )
+
+    # pkg remove
+    remove_parser = pkg_subparsers.add_parser(
+        'remove',
+        help='Remove a dependency'
+    )
+    remove_parser.add_argument(
+        'package',
+        help='Package name to remove'
+    )
+    remove_parser.add_argument(
+        '--dev',
+        action='store_true',
+        help='Remove from development dependencies'
+    )
+
+    # pkg install
+    pkg_subparsers.add_parser(
+        'install',
+        help='Install all dependencies'
+    )
+
+    # pkg list
+    pkg_subparsers.add_parser(
+        'list',
+        help='List installed packages'
+    )
+
+
 def main():
     """Enhanced main CLI entry point with subcommands."""
     parser = create_main_parser()
@@ -272,7 +381,7 @@ def main():
 
     # Check if first argument looks like a file (legacy mode)
     if len(sys.argv) > 1 and not sys.argv[1].startswith('-') and sys.argv[1] not in [
-        'build', 'fmt', 'lint', 'new', 'watch', 'check', 'doc'
+        'build', 'fmt', 'lint', 'new', 'watch', 'check', 'doc', 'test', 'pkg'
     ]:
         # Legacy mode - treat as build command
         sys.argv.insert(1, 'build')
@@ -295,6 +404,10 @@ def main():
             handle_check_command(args)
         elif args.command == 'doc':
             handle_doc_command(args)
+        elif args.command == 'test':
+            handle_test_command(args)
+        elif args.command == 'pkg':
+            handle_pkg_command(args)
         else:
             parser.print_help()
 
@@ -618,6 +731,83 @@ def handle_doc_command(args):
 
     except Exception as e:
         print(f"Error generating documentation: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def handle_test_command(args):
+    """Handle the test command."""
+    try:
+        from .testing import run_tests, TestRunner
+
+        test_path = Path(args.path)
+
+        if not test_path.exists():
+            print(f"Error: Test path '{test_path}' does not exist", file=sys.stderr)
+            sys.exit(1)
+
+        if args.verbose:
+            print(f"Running tests from {test_path}...")
+
+        # Run the tests
+        success = run_tests(str(test_path), args.pattern)
+
+        if not success:
+            sys.exit(1)
+
+    except Exception as e:
+        print(f"Error running tests: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def handle_pkg_command(args):
+    """Handle the package manager command."""
+    try:
+        from .package_manager import (
+            PackageManager,
+            init_project,
+            install_packages,
+            add_package,
+            remove_package
+        )
+
+        pm = PackageManager(".")
+
+        if args.pkg_command == 'init':
+            pm.init(name=args.name)
+
+        elif args.pkg_command == 'add':
+            pm.load()
+            pm.add(args.package, args.version, args.dev)
+
+        elif args.pkg_command == 'remove':
+            pm.load()
+            pm.remove(args.package, args.dev)
+
+        elif args.pkg_command == 'install':
+            pm.install()
+
+        elif args.pkg_command == 'list':
+            pm.load()
+            packages = pm.list()
+            if packages:
+                print("\n📦 Installed packages:")
+                for name, version, status in packages:
+                    status_icon = "✓" if status == "installed" else "✗"
+                    print(f"  {status_icon} {name} {version} ({status})")
+            else:
+                print("No packages installed")
+
+        else:
+            print("Usage: stxscript pkg <init|add|remove|install|list>")
+            print("\nCommands:")
+            print("  init              Initialize a new package")
+            print("  add <package>     Add a dependency")
+            print("  remove <package>  Remove a dependency")
+            print("  install           Install all dependencies")
+            print("  list              List installed packages")
+
+    except Exception as e:
+        print(f"Error in package manager: {e}", file=sys.stderr)
         sys.exit(1)
 
 

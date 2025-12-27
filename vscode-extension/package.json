@@ -1,0 +1,125 @@
+{
+  "name": "stxscript",
+  "displayName": "StxScript",
+  "description": "Language support for StxScript - TypeScript-inspired language for Stacks blockchain",
+  "version": "0.3.0",
+  "publisher": "stxscript",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Snippets"
+  ],
+  "keywords": [
+    "stxscript",
+    "clarity",
+    "stacks",
+    "blockchain",
+    "smart-contracts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cryptuon/stxscript"
+  },
+  "license": "MIT",
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:stxscript"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "stxscript",
+        "aliases": [
+          "StxScript",
+          "stxscript"
+        ],
+        "extensions": [
+          ".stx"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/stxscript-light.png",
+          "dark": "./icons/stxscript-dark.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "stxscript",
+        "scopeName": "source.stxscript",
+        "path": "./syntaxes/stxscript.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "StxScript",
+      "properties": {
+        "stxscript.server.path": {
+          "type": "string",
+          "default": "stxscript-lsp",
+          "description": "Path to the StxScript language server executable"
+        },
+        "stxscript.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server"
+        },
+        "stxscript.format.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable formatting"
+        },
+        "stxscript.lint.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable linting"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "stxscript.transpile",
+        "title": "StxScript: Transpile to Clarity"
+      },
+      {
+        "command": "stxscript.format",
+        "title": "StxScript: Format Document"
+      },
+      {
+        "command": "stxscript.restartServer",
+        "title": "StxScript: Restart Language Server"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "stxscript",
+        "path": "./snippets/stxscript.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.75.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  }
+}

@@ -4,26 +4,7 @@ This document provides a comprehensive reference for the StxScript language synt
 
 ## Overview
 
-StxScript is a TypeScript-inspired language that transpiles to Clarity, the smart contract language for the Stacks blockchain. It aims to provide familiar syntax while maintaining full compatibility with Clarity's type system and capabilities.
-
-## Current Implementation Status
-
-**✅ Fully Implemented:**
-- Variable declarations
-- Constant declarations
-- Basic types
-- Function declarations
-- Type annotations
-
-**🚧 In Progress:**
-- Expression evaluation
-- Control flow
-- Function bodies
-
-**📝 Planned:**
-- Classes and traits
-- Maps and complex data structures
-- Error handling
+StxScript is a TypeScript-inspired language that transpiles to Clarity, the smart contract language for the Stacks blockchain. It provides familiar syntax while maintaining full compatibility with Clarity's type system.
 
 ## Basic Syntax
 
@@ -32,10 +13,10 @@ StxScript is a TypeScript-inspired language that transpiles to Clarity, the smar
 ```typescript
 // Single-line comment
 
-/*
-  Multi-line comment
-  (not yet implemented)
-*/
+/* Multi-line
+   comment */
+
+/// Documentation comment
 ```
 
 ### Statements
@@ -51,14 +32,14 @@ const MAX_SUPPLY: uint = 1000000u;
 
 ### Primitive Types
 
-| StxScript Type | Clarity Type | Description | Range/Notes |
-|----------------|--------------|-------------|-------------|
-| `int` | `int` | Signed integer | -2^127 to 2^127-1 |
-| `uint` | `uint` | Unsigned integer | 0 to 2^128-1 |
-| `boolean` | `bool` | Boolean value | `true` or `false` |
-| `string` | `string-utf8` | UTF-8 string | Max length specified |
-| `principal` | `principal` | Stacks address | Contract or wallet address |
-| `buffer` | `buff` | Byte buffer | Fixed-length byte array |
+| StxScript Type | Clarity Type | Description |
+|----------------|--------------|-------------|
+| `int` | `int` | Signed 128-bit integer |
+| `uint` | `uint` | Unsigned 128-bit integer |
+| `bool` / `boolean` | `bool` | Boolean value |
+| `string` | `string-utf8` | UTF-8 string |
+| `principal` | `principal` | Stacks address |
+| `buffer` / `buffer<N>` | `buff` | Byte buffer |
 
 ### Type Literals
 
@@ -72,41 +53,59 @@ let count: uint = 100u;
 let supply: uint = 1000000u;
 
 // Booleans
-let isActive: boolean = true;
+let isActive: bool = true;
 let isComplete: boolean = false;
 
 // Strings
 let name: string = "Hello, World!";
-let symbol: string = "STX";
 
 // Principals (Stacks addresses)
 let wallet: principal = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7;
 let contract: principal = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7.my-contract;
+
+// Buffers with size
+let data: buffer<32> = 0x1234;
 ```
 
-### Complex Types (Planned)
+### Complex Types
 
 ```typescript
-// Lists (not yet implemented)
-let numbers: list<uint> = [1u, 2u, 3u];
+// Lists
+let numbers: List<uint> = [1u, 2u, 3u];
 
-// Tuples (not yet implemented)
-let person: {name: string, age: uint} = {name: "Alice", age: 30u};
+// Tuples
+let person: { name: string, age: uint } = { name: "Alice", age: 30u };
 
-// Optionals (not yet implemented)
-let maybe_value: optional<uint> = some(42u);
-let empty_value: optional<uint> = none();
+// Optionals
+let maybeValue: Optional<uint> = some(42u);
+let emptyValue: Optional<uint> = none;
 
-// Response types (not yet implemented)
-let result: Response<uint, string> = ok(100u);
-let error: Response<uint, string> = err("Invalid input");
+// Response types
+let success: Response<uint, string> = ok(100u);
+let failure: Response<uint, string> = err("Invalid input");
+
+// Maps
+map balances<principal, uint>;
+```
+
+### Type Aliases
+
+```typescript
+// Create type aliases
+type Amount = uint;
+type Address = principal;
+type Balance = { amount: uint, locked: bool };
+
+// Use type aliases
+let transfer_amount: Amount = 1000u;
+let recipient: Address = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7;
 ```
 
 ## Variables and Constants
 
 ### Variable Declarations
 
-Variables are declared with `let` and can be reassigned (in future versions):
+Variables are declared with `let`:
 
 ```typescript
 // With type annotation
@@ -114,94 +113,65 @@ let balance: uint = 1000u;
 let name: string = "Token";
 
 // With type inference
-let count = 42u;  // Inferred as uint
-let active = true;  // Inferred as boolean
+let count = 42u;      // Inferred as uint
+let active = true;    // Inferred as bool
 ```
 
 **Generated Clarity:**
 ```lisp
 (define-data-var balance uint u1000)
-(define-data-var name string "Token")
-(define-data-var count uint u42)
-(define-data-var active bool true)
+(define-data-var name (string-utf8 5) u"Token")
 ```
 
 ### Constant Declarations
 
-Constants are declared with `const` and cannot be reassigned:
+Constants are declared with `const`:
 
 ```typescript
 const MAX_SUPPLY: uint = 1000000u;
 const TOKEN_NAME: string = "MyToken";
-const DECIMALS: uint = 6u;
 ```
 
 **Generated Clarity:**
 ```lisp
 (define-constant MAX_SUPPLY u1000000)
-(define-constant TOKEN_NAME "MyToken")
-(define-constant DECIMALS u6)
-```
-
-### Naming Conventions
-
-- Use `camelCase` for variables and functions
-- Use `UPPER_SNAKE_CASE` for constants
-- Use `PascalCase` for types and classes
-
-```typescript
-// Good
-let tokenBalance: uint = 100u;
-const MAX_SUPPLY: uint = 1000000u;
-
-// Avoid
-let TokenBalance: uint = 100u;  // Wrong case
-let token_balance: uint = 100u;  // Wrong style
+(define-constant TOKEN_NAME u"MyToken")
 ```
 
 ## Functions
 
 ### Function Declarations
 
-Functions are declared with the `function` keyword:
-
 ```typescript
-// Basic function
+// Private function (default)
 function add(a: int, b: int): int {
-    // Function body (implementation pending)
+    return a + b;
 }
 
-// Public function (accessible from other contracts)
+// Public function
 @public
 function transfer(to: principal, amount: uint): Response<bool, string> {
     // Implementation
+    return ok(true);
 }
 
-// Read-only function (doesn't modify state)
-@readable
+// Read-only function
+@readonly
 function getBalance(account: principal): uint {
-    // Implementation
-}
-
-// Private function (internal use only)
-function validateAmount(amount: uint): boolean {
-    // Implementation
+    return balances.get(account);
 }
 ```
 
 **Generated Clarity:**
 ```lisp
 (define-private (add (a int) (b int))
-  )
+  (+ a b))
 
 (define-public (transfer (to principal) (amount uint))
-  )
+  (ok true))
 
-(define-read-only (getBalance (account principal))
-  )
-
-(define-private (validateAmount (amount uint))
-  )
+(define-read-only (get-balance (account principal))
+  (map-get? balances account))
 ```
 
 ### Function Decorators
@@ -209,36 +179,26 @@ function validateAmount(amount: uint): boolean {
 | Decorator | Clarity Equivalent | Description |
 |-----------|-------------------|-------------|
 | `@public` | `define-public` | Publicly callable function |
-| `@readable` | `define-read-only` | Read-only function |
+| `@readonly` | `define-read-only` | Read-only function |
 | (none) | `define-private` | Private function (default) |
 
-### Parameters and Return Types
+### Generic Functions
 
 ```typescript
-// Function with multiple parameters
-function calculateFee(amount: uint, rate: uint): uint {
-    // Implementation
+function identity<T>(value: T): T {
+    return value;
 }
 
-// Function with Response return type
-@public
-function safeDivide(a: uint, b: uint): Response<uint, string> {
-    // Implementation
-}
-
-// Function with no parameters
-@readable
-function getContractInfo(): string {
-    // Implementation
+function swap<T, U>(a: T, b: U): { first: U, second: T } {
+    return { first: b, second: a };
 }
 ```
 
-## Expressions (Planned)
+## Expressions
 
 ### Arithmetic Operations
 
 ```typescript
-// Basic arithmetic (not yet implemented)
 let sum = a + b;
 let difference = a - b;
 let product = a * b;
@@ -249,7 +209,6 @@ let remainder = a % b;
 ### Comparison Operations
 
 ```typescript
-// Comparison operators (not yet implemented)
 let isGreater = a > b;
 let isEqual = a == b;
 let isNotEqual = a != b;
@@ -259,18 +218,27 @@ let isLessOrEqual = a <= b;
 ### Logical Operations
 
 ```typescript
-// Logical operators (not yet implemented)
 let both = condition1 && condition2;
 let either = condition1 || condition2;
 let opposite = !condition;
 ```
 
-## Control Flow (Planned)
-
-### Conditional Statements
+### Bitwise Operations
 
 ```typescript
-// If statements (not yet implemented)
+let andResult = a & b;
+let orResult = a | b;
+let xorResult = a ^ b;
+let notResult = ~a;
+let leftShift = a << 2;
+let rightShift = a >> 2;
+```
+
+## Control Flow
+
+### If/Else Statements
+
+```typescript
 if (balance > amount) {
     // Transfer logic
 } else {
@@ -281,37 +249,133 @@ if (balance > amount) {
 let result = condition ? value1 : value2;
 ```
 
-### Loops
+### Match Expressions
 
 ```typescript
-// For loops (not yet implemented)
-for (let i = 0u; i < 10u; i = i + 1u) {
-    // Loop body
+match result {
+    ok(value) => value,
+    err(e) => 0u
 }
 
-// While loops
-while (condition) {
-    // Loop body
+match maybeValue {
+    some(v) => v,
+    none => defaultValue
 }
 ```
 
-## Error Handling (Planned)
-
-### Try-Catch
+### For Loops
 
 ```typescript
-// Error handling (not yet implemented)
-try {
-    let result = riskyOperation();
-} catch (error: string) {
-    // Handle error
+// Compiles to fold over range
+for (let i = 0; i < 10; i = i + 1) {
+    sum = sum + i;
 }
 ```
+
+### While Loops
+
+```typescript
+// Requires bounded iteration
+while (count < limit) {
+    count = count + 1;
+}
+```
+
+## Data Structures
+
+### Maps
+
+```typescript
+// Declaration
+map balances<principal, uint>;
+map allowances<{ owner: principal, spender: principal }, uint>;
+
+// Operations
+let balance = balances.get(account);
+balances.set(account, newBalance);
+balances.delete(account);
+```
+
+### Lists
+
+```typescript
+// List literals
+let numbers: List<uint> = [1u, 2u, 3u, 4u, 5u];
+
+// List operations
+let doubled = map(numbers, (x) => x * 2u);
+let evens = filter(numbers, (x) => x % 2u == 0u);
+let sum = fold(numbers, 0u, (acc, x) => acc + x);
+```
+
+### Tuples
+
+```typescript
+// Tuple creation
+let user = { name: "Alice", balance: 1000u };
+
+// Tuple access
+let userName = user.name;
+let userBalance = user.balance;
+```
+
+## Traits
+
+### Trait Definition
+
+```typescript
+trait Token {
+    transfer(from: principal, to: principal, amount: uint): Response<bool, uint>;
+    getBalance(account: principal): uint;
+}
+```
+
+### Trait Implementation
+
+```typescript
+@implements(Token)
+class MyToken {
+    @public
+    function transfer(from: principal, to: principal, amount: uint): Response<bool, uint> {
+        // Implementation
+    }
+
+    @readonly
+    function getBalance(account: principal): uint {
+        // Implementation
+    }
+}
+```
+
+## Lambda Expressions
+
+```typescript
+// Arrow function syntax
+let double = (x: uint) => x * 2u;
+
+// With multiple parameters
+let add = (a: uint, b: uint) => a + b;
+
+// Used with higher-order functions
+let doubled = map(numbers, (x) => x * 2u);
+```
+
+## Import/Export
+
+```typescript
+// Import from other modules
+import { TokenTrait } from "./traits";
+import { utils } from "../lib/utils";
+
+// Contract calls
+let result = OtherContract.method(arg1, arg2);
+```
+
+## Error Handling
 
 ### Response Types
 
 ```typescript
-// Response type handling (not yet implemented)
 function divide(a: uint, b: uint): Response<uint, string> {
     if (b == 0u) {
         return err("Division by zero");
@@ -320,88 +384,17 @@ function divide(a: uint, b: uint): Response<uint, string> {
 }
 ```
 
-## Advanced Features (Planned)
-
-### Classes and Traits
+### Unwrapping
 
 ```typescript
-// Trait definition (not yet implemented)
-trait Token {
-    transfer(from: principal, to: principal, amount: uint): Response<bool, string>;
-    getBalance(account: principal): uint;
-}
+// Force unwrap (panics if none/err)
+let value = maybeValue!;
 
-// Class implementation
-@asset
-class NFT {
-    id: uint;
-    owner: principal;
-    metadata: string;
-}
-```
+// Unwrap with default
+let value = maybeValue ?? defaultValue;
 
-### Maps
-
-```typescript
-// Map declarations (not yet implemented)
-@map
-const balances: Map<principal, uint> = new Map();
-
-@map
-const allowances: Map<{owner: principal, spender: principal}, uint> = new Map();
-```
-
-## Built-in Functions (Planned)
-
-### Clarity Integration
-
-```typescript
-// Direct Clarity function calls (not yet implemented)
-let hash = clarity.sha256(data);
-let height = clarity.blockHeight();
-let sender = tx.sender;
-```
-
-### Utility Functions
-
-```typescript
-// List operations (not yet implemented)
-let mapped = map(numbers, (x) => x * 2);
-let filtered = filter(numbers, (x) => x > 10u);
-let reduced = fold(numbers, 0u, (acc, x) => acc + x);
-```
-
-## Type System
-
-### Type Inference
-
-StxScript can infer types in many cases:
-
-```typescript
-let count = 42u;        // Inferred as uint
-let name = "Token";     // Inferred as string
-let active = true;      // Inferred as boolean
-```
-
-### Type Annotations
-
-Explicit type annotations are recommended for clarity:
-
-```typescript
-let balance: uint = 0u;
-let owner: principal = tx.sender;
-```
-
-### Type Conversion (Planned)
-
-```typescript
-// Type assertions (not yet implemented)
-let value = someValue as uint;
-
-// Type checking
-if (value is uint) {
-    // Handle as uint
-}
+// Try unwrap (propagates error)
+let value = try!(riskyOperation());
 ```
 
 ## Best Practices
@@ -409,111 +402,42 @@ if (value is uint) {
 ### Code Organization
 
 ```typescript
-// Constants at the top
+// 1. Constants at the top
 const TOKEN_NAME: string = "MyToken";
 const MAX_SUPPLY: uint = 1000000u;
 
-// State variables
-let totalSupply: uint = 0u;
-let contractOwner: principal = tx.sender;
+// 2. Type aliases
+type Amount = uint;
+type Address = principal;
 
-// Functions grouped by visibility
+// 3. Maps
+map balances<Address, Amount>;
+
+// 4. State variables
+let totalSupply: Amount = 0u;
+
+// 5. Public functions
 @public
-function publicFunction1() { }
+function mint(amount: Amount): Response<bool, uint> { }
 
-@public
-function publicFunction2() { }
+// 6. Read-only functions
+@readonly
+function getSupply(): Amount { }
 
-@readable
-function readOnlyFunction1() { }
-
-function privateFunction1() { }
+// 7. Private helpers
+function validateAmount(amount: Amount): bool { }
 ```
 
-### Error Handling
+### Error Codes
 
 ```typescript
-// Use descriptive error codes
 const ERR_UNAUTHORIZED: uint = 100u;
 const ERR_INSUFFICIENT_BALANCE: uint = 101u;
 const ERR_INVALID_AMOUNT: uint = 102u;
 ```
 
-### Documentation
-
-```typescript
-// Document complex functions
-@public
-function complexTransfer(
-    from: principal,
-    to: principal,
-    amount: uint,
-    memo: string
-): Response<bool, uint> {
-    // Transfers tokens with validation and event emission
-    // Returns ok(true) on success, err(code) on failure
-}
-```
-
-## Migration from Other Languages
-
-### From TypeScript
-
-StxScript syntax is very similar to TypeScript:
-
-```typescript
-// TypeScript
-interface Token {
-    name: string;
-    symbol: string;
-    totalSupply: number;
-}
-
-// StxScript equivalent (planned)
-trait Token {
-    getName(): string;
-    getSymbol(): string;
-    getTotalSupply(): uint;
-}
-```
-
-### From Clarity
-
-Direct translation is often straightforward:
-
-```lisp
-;; Clarity
-(define-constant TOKEN_NAME "MyToken")
-(define-data-var total-supply uint u0)
-
-(define-public (transfer (amount uint) (recipient principal))
-  (ok true))
-```
-
-```typescript
-// StxScript
-const TOKEN_NAME: string = "MyToken";
-let totalSupply: uint = 0u;
-
-@public
-function transfer(amount: uint, recipient: principal): Response<bool, uint> {
-    return ok(true);
-}
-```
-
-## Limitations
-
-Current limitations of the StxScript implementation:
-
-1. **Function bodies**: Only declarations supported, no implementations
-2. **Expressions**: Limited expression evaluation
-3. **Control flow**: No if/else, loops, or complex logic
-4. **Maps and lists**: Not yet implemented
-5. **Error handling**: No try/catch support
-6. **Classes**: Not yet implemented
-
 ## See Also
 
 - [Examples](examples.md) - Practical code examples
 - [API Documentation](api.md) - Python API reference
-- [Installation Guide](installation.md) - Setup instructions
+- [CLI Reference](cli.md) - Command-line interface

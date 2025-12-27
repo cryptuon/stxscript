@@ -1,177 +1,396 @@
-// StxScript Working Grammar - Simplified to avoid conflicts
+// StxScript Grammar - Full TypeScript-like features
+// Supports: classes, bitwise ops, contract calls, typed lambdas, optional chaining
 
-// Literals and Tokens - defined first for priority
-UINTEGER.2: /[0-9]+u/
-INTEGER.1: /-?[0-9]+/
-STRING: /".*?"/
-BOOLEAN: "true" | "false"
+// =============================================================================
+// TOKENS - Priority-ordered literals and keywords
+// =============================================================================
 
-// Type tokens
-INT_TYPE: "int"
-UINT_TYPE: "uint"
-BOOLEAN_TYPE: "boolean"
-STRING_TYPE: "string"
-BUFFER_TYPE: "buffer"
-PRINCIPAL_TYPE: "principal"
+// Literals (higher priority first)
+UINTEGER.3: /[0-9]+u/
+INTEGER.2: /-?[0-9]+/
+STRING: /"[^"]*"/
+BOOLEAN.3: "true" | "false"
+PRINCIPAL.2: /'[A-Z0-9]+(\.[a-zA-Z][a-zA-Z0-9_-]*)*/
+
+// Type keywords (high priority to avoid matching as IDENTIFIER)
+BOOL_TYPE.2: "bool"
+INT_TYPE.2: "int"
+UINT_TYPE.2: "uint"
+BOOLEAN_TYPE.2: "boolean"
+STRING_TYPE.2: "string"
+BUFFER_TYPE.2: "buffer"
+PRINCIPAL_TYPE.2: "principal"
+RESPONSE.2: "Response"
+OPTIONAL.2: "optional"
+LIST.2: "list"
+MAP_TYPE.2: "Map"
 
 // Special keywords (must come before IDENTIFIER)
 UNWRAP.3: "unwrap!"
 TRY.3: "try!"
-MAP.3: "map"
 
-// Identifier (must come after keywords)
+// Reserved words
+CLASS.2: "class"
+TRAIT.2: "trait"
+IMPLEMENTS.2: "implements"
+NEW.2: "new"
+THIS.2: "this"
+FUNCTION.2: "function"
+LET.2: "let"
+CONST.2: "const"
+RETURN.2: "return"
+IF.2: "if"
+ELSE.2: "else"
+MATCH.2: "match"
+IMPORT.2: "import"
+EXPORT.2: "export"
+FROM.2: "from"
+IN.2: "in"
+SOME.2: "some"
+NONE.2: "none"
+OK.2: "ok"
+ERR.2: "err"
+MAP_KW.2: "map"
+TYPE_KW.2: "type"
+FOR.2: "for"
+WHILE.2: "while"
+
+// Identifier (must come after all keywords)
 IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
 
-// Root rule
-start: (statement | function_declaration | trait_declaration)*
+// =============================================================================
+// ROOT RULE
+// =============================================================================
 
-// Statements
+start: top_level_item*
+
+top_level_item: class_declaration
+              | function_declaration
+              | trait_declaration
+              | variable_declaration
+              | constant_declaration
+              | map_declaration
+              | type_alias_declaration
+              | import_statement
+              | export_statement
+
+// =============================================================================
+// TYPE ALIAS DECLARATIONS
+// =============================================================================
+
+type_alias_declaration: TYPE_KW IDENTIFIER "=" type ";"
+
+// =============================================================================
+// CLASS DECLARATIONS
+// =============================================================================
+
+class_declaration: decorator* CLASS IDENTIFIER [IMPLEMENTS IDENTIFIER] "{" class_member* "}"
+
+class_member: function_declaration
+            | field_declaration
+            | map_declaration
+
+field_declaration: decorator* IDENTIFIER ":" type ["=" expression] ";"
+
+// =============================================================================
+// FUNCTION DECLARATIONS
+// =============================================================================
+
+function_declaration: decorator* FUNCTION IDENTIFIER [generic_params] "(" [parameter_list] ")" [":" type] block
+
+// Generic type parameters: <T>, <T, U>, etc.
+generic_params: "<" TYPE_PARAM ("," TYPE_PARAM)* ">"
+TYPE_PARAM: /[A-Z]/
+
+parameter_list: parameter ("," parameter)*
+parameter: IDENTIFIER ":" type
+
+// =============================================================================
+// TRAIT DECLARATIONS
+// =============================================================================
+
+trait_declaration: TRAIT IDENTIFIER "{" trait_method* "}"
+trait_method: IDENTIFIER "(" [parameter_list] ")" [":" type] ";"
+
+// =============================================================================
+// STATEMENTS
+// =============================================================================
+
 statement: variable_declaration
          | constant_declaration
          | assignment_statement
          | return_statement
          | if_statement
+         | for_statement
+         | while_statement
          | map_declaration
          | map_operation
-         | import_statement
-         | export_statement
          | expression_statement
 
-// Declarations
-variable_declaration: "let" IDENTIFIER ":" type "=" expression ";"
-                    | "let" IDENTIFIER "=" expression ";"
-constant_declaration: "const" IDENTIFIER [":" type] "=" expression ";"
-map_declaration: MAP IDENTIFIER "<" type "," type ">" ";"
+// For loop: for (let i = 0; i < 10; i = i + 1) { body }
+for_statement: FOR "(" for_init ";" expression ";" for_update ")" block
+for_init: LET IDENTIFIER [":" type] "=" expression
+for_update: IDENTIFIER "=" expression
+
+// While loop: while (condition) { body }
+while_statement: WHILE "(" expression ")" block
+
+variable_declaration: LET IDENTIFIER [":" type] "=" expression ";"
+constant_declaration: CONST IDENTIFIER [":" type] "=" expression ";"
+
+assignment_statement: IDENTIFIER "=" expression ";"
+
+return_statement: RETURN [expression] ";"
+
+if_statement: IF "(" expression ")" block [ELSE (if_statement | block)]
+
+expression_statement: expression ";"
+
+// =============================================================================
+// MAP DECLARATIONS AND OPERATIONS
+// =============================================================================
+
+map_declaration: MAP_KW IDENTIFIER "<" type "," type ">" ";"
+
 map_operation: map_insert | map_update | map_delete
+
 map_insert: IDENTIFIER ".insert" "(" expression "," expression ")" ";"
 map_update: IDENTIFIER ".update" "(" expression "," expression ")" ";"
 map_delete: IDENTIFIER ".delete" "(" expression ")" ";"
 
-import_statement: "import" "{" import_list "}" "from" STRING ";"
+// =============================================================================
+// IMPORT/EXPORT
+// =============================================================================
+
+import_statement: IMPORT "{" import_list "}" FROM STRING ";"
 import_list: IDENTIFIER ("," IDENTIFIER)*
-export_statement: "export" (function_declaration | variable_declaration | constant_declaration | map_declaration)
 
-function_declaration: decorator* "function" IDENTIFIER "(" [parameter_list] ")" [":" type] block
+export_statement: EXPORT (function_declaration | variable_declaration | constant_declaration)
 
-trait_declaration: "trait" IDENTIFIER "{" trait_method* "}"
-trait_method: IDENTIFIER "(" [parameter_list] ")" [":" type] ";"
+// =============================================================================
+// TYPES - Comprehensive type system
+// =============================================================================
 
-// Expression statement
-expression_statement: expression ";"
+type: simple_type
+    | response_type
+    | optional_type
+    | list_type
+    | map_type
+    | tuple_type
+    | custom_type
 
-// Assignment statement
-assignment_statement: IDENTIFIER "=" expression ";"
+simple_type: INT_TYPE -> int_type
+           | UINT_TYPE -> uint_type
+           | BOOL_TYPE -> bool_type
+           | BOOLEAN_TYPE -> bool_type
+           | STRING_TYPE -> string_type
+           | BUFFER_TYPE "<" INTEGER ">" -> sized_buffer_type
+           | BUFFER_TYPE -> buffer_type
+           | PRINCIPAL_TYPE -> principal_type
 
-// Return statement
-return_statement: "return" [expression] ";"
+// Custom type reference (type aliases)
+custom_type: IDENTIFIER
 
-// Control flow statements
-if_statement: "if" "(" expression ")" block ["else" (if_statement | block)]
-match_expression: "match" expression "{" match_arm+ "}"
+// Tuple type: { field: Type, ... }
+tuple_type: "{" tuple_type_field ("," tuple_type_field)* "}"
+tuple_type_field: IDENTIFIER ":" type
+
+response_type: RESPONSE "<" type "," type ">"
+optional_type: OPTIONAL "<" type ">"
+list_type: LIST "<" type ">"
+map_type: MAP_TYPE "<" type "," type ">"
+
+// =============================================================================
+// EXPRESSIONS - Precedence from lowest to highest
+// =============================================================================
+
+expression: nullish_coalescing
+
+// Nullish coalescing (??) - lowest precedence
+?nullish_coalescing: ternary (NULLISH_OP ternary)*
+NULLISH_OP: "??"
+
+// Ternary (for future support, currently pass-through)
+?ternary: logical_or
+
+// Logical OR
+?logical_or: logical_and (OR_OP logical_and)*
+OR_OP: "||"
+
+// Logical AND
+?logical_and: bitwise_or (AND_OP bitwise_or)*
+AND_OP: "&&"
+
+// Bitwise OR
+?bitwise_or: bitwise_xor (BIT_OR bitwise_xor)*
+BIT_OR: "|"
+
+// Bitwise XOR
+?bitwise_xor: bitwise_and (BIT_XOR bitwise_and)*
+BIT_XOR: "^"
+
+// Bitwise AND
+?bitwise_and: equality (BIT_AND equality)*
+BIT_AND: "&"
+
+// Equality
+?equality: comparison (EQ_OP comparison)*
+EQ_OP: "==" | "!="
+
+// Comparison
+?comparison: shift ((COMP_OP | LESSTHAN | MORETHAN) shift)*
+COMP_OP.2: "<=" | ">="
+LESSTHAN: "<"
+MORETHAN: ">"
+
+// Bit shift
+?shift: addition (SHIFT_OP addition)*
+SHIFT_OP.2: "<<" | ">>"
+
+// Addition/Subtraction
+?addition: multiplication (ADD_OP multiplication)*
+ADD_OP: "+" | "-"
+
+// Multiplication/Division/Modulo
+?multiplication: unary (MUL_OP unary)*
+MUL_OP: "*" | "/" | "%"
+
+// Unary operators
+?unary: NOT_OP unary -> unary_not
+      | MINUS unary -> unary_neg
+      | PLUS unary -> unary_pos
+      | BIT_NOT unary -> unary_bitnot
+      | power
+
+NOT_OP: "!"
+MINUS: "-"
+PLUS: "+"
+BIT_NOT: "~"
+
+// Power
+?power: postfix (POW_OP unary)?
+POW_OP: "**"
+
+// Postfix operators (force unwrap, method chains)
+?postfix: primary postfix_op*
+
+postfix_op: "!" -> force_unwrap
+          | "." IDENTIFIER "(" [argument_list] ")" -> method_call
+          | "." IDENTIFIER -> member_access
+          | "[" expression "]" -> index_op
+
+// Primary expressions
+?primary: literal
+        | IDENTIFIER -> identifier
+        | PRINCIPAL -> principal_literal
+        | THIS -> this_expr
+        | call_expr
+        | new_expression
+        | match_expression
+        | let_expression
+        | unwrap_expression
+        | try_expression
+        | list_literal
+        | tuple_literal
+        | some_expression
+        | none_expression
+        | ok_expression
+        | err_expression
+        | lambda_expression
+        | "(" expression ")" -> grouped_expr
+
+// =============================================================================
+// CALL EXPRESSIONS - Unified function and contract calls
+// =============================================================================
+
+// Handle both function calls and contract.method calls
+call_expr: IDENTIFIER "(" [argument_list] ")" -> function_call
+         | IDENTIFIER "." IDENTIFIER "(" [argument_list] ")" -> contract_call
+
+argument_list: expression ("," expression)*
+
+// New expression for Map/etc
+new_expression: NEW IDENTIFIER "<" type ("," type)* ">" "(" ")"
+
+// =============================================================================
+// SPECIAL EXPRESSIONS
+// =============================================================================
+
+match_expression: MATCH expression "{" match_arm+ "}"
 match_arm: pattern "=>" expression ";"
 pattern: IDENTIFIER | literal | "_"
 
-let_expression: "let" "{" let_binding+ "}" "in" expression
+let_expression: LET "{" let_binding+ "}" IN expression
 let_binding: IDENTIFIER "=" expression ";"
 
 unwrap_expression: UNWRAP "(" expression ")"
 try_expression: TRY "(" expression ")"
 
+some_expression: SOME "(" expression ")"
+none_expression: NONE "(" ")"
+
+ok_expression: OK "(" expression ")"
+err_expression: ERR "(" expression ")"
+
+// =============================================================================
+// LAMBDA EXPRESSIONS - Must have arrow to distinguish from grouped expr
+// =============================================================================
+
+// Typed lambda: (x: int, y: int): int => expr
+// Untyped lambda: (x, y) => expr
+// No-param lambda: () => expr
+lambda_expression: "(" typed_params ")" ":" type "=>" lambda_body -> typed_lambda
+                 | "(" ")" "=>" lambda_body -> empty_lambda
+                 | "(" IDENTIFIER ("," IDENTIFIER)* ")" "=>" lambda_body -> untyped_lambda
+
+typed_params: typed_param ("," typed_param)*
+typed_param: IDENTIFIER ":" type
+
+lambda_body: expression
+
+// =============================================================================
+// LIST AND TUPLE LITERALS
+// =============================================================================
+
 list_literal: "[" [expression ("," expression)*] "]"
-list_index: IDENTIFIER "[" expression "]"
 
-tuple_literal: "{" [tuple_field ("," tuple_field)*] "}"
+// Tuple must have at least one field to distinguish from empty block
+tuple_literal: "{" tuple_field ("," tuple_field)* "}"
 tuple_field: IDENTIFIER ":" expression
-tuple_access: IDENTIFIER "." IDENTIFIER
 
-some_expression: "some" "(" expression ")"
-none_expression: "none" "()"
+// =============================================================================
+// BLOCK - Cannot be empty (use statement* which allows empty)
+// =============================================================================
 
-ok_expression: "ok" "(" expression ")"
-err_expression: "err" "(" expression ")"
-
-lambda_expression: lambda_signature "=>" expression
-lambda_signature: "(" [IDENTIFIER ("," IDENTIFIER)*] ")"
-
-
-// Function-related
-parameter_list: parameter ("," parameter)*
-parameter: IDENTIFIER ":" type
-
-// Types
-type: INT_TYPE | UINT_TYPE | BOOLEAN_TYPE | STRING_TYPE | BUFFER_TYPE | PRINCIPAL_TYPE
-    | "Response" "<" type "," type ">"
-
-// Expressions with precedence (lowest to highest)
-expression: logical_or
-
-?logical_or: logical_and (OR_OP logical_and)*
-
-?logical_and: equality (AND_OP equality)*
-
-?equality: comparison (EQ_OP comparison)*
-
-?comparison: addition (COMP_OP addition)*
-
-?addition: multiplication (ADD_OP multiplication)*
-
-?multiplication: unary (MUL_OP unary)*
-
-OR_OP: "||"
-AND_OP: "&&"
-EQ_OP: "==" | "!="
-COMP_OP: "<" | ">" | "<=" | ">="
-ADD_OP: "+" | "-"
-MUL_OP: "*" | "/" | "%"
-
-unary: UNARY_OP unary | power
-
-UNARY_OP: "!" | "-" | "+"
-
-power: atom (POW_OP unary)?
-
-POW_OP: "**"
-
-atom: literal
-    | IDENTIFIER
-    | function_call
-    | match_expression
-    | let_expression
-    | unwrap_expression
-    | try_expression
-    | list_literal
-    | list_index
-    | tuple_literal
-    | tuple_access
-    | some_expression
-    | none_expression
-    | ok_expression
-    | err_expression
-    | lambda_expression
-    | "(" expression ")"
-
-function_call: IDENTIFIER "(" [argument_list] ")"
-argument_list: expression ("," expression)*
-
-// Block - only used for function bodies
 block: "{" statement* "}"
 
-// Decorators
+// =============================================================================
+// DECORATORS
+// =============================================================================
+
 decorator: "@" IDENTIFIER
 
-// Literals
-literal: INTEGER
-       | UINTEGER
-       | STRING
-       | BOOLEAN
+// =============================================================================
+// LITERALS
+// =============================================================================
 
+literal: INTEGER -> integer_literal
+       | UINTEGER -> uinteger_literal
+       | STRING -> string_literal
+       | BOOLEAN -> boolean_literal
 
-// Comments
+// =============================================================================
+// COMMENTS - Ignored
+// =============================================================================
+
 SINGLE_LINE_COMMENT: "//" /[^\n]*/
 DOC_COMMENT: "///" /[^\n]*/
-MULTI_LINE_COMMENT: "/*" /.*?/ "*/"
+MULTI_LINE_COMMENT: "/*" /(.|\n)*?/ "*/"
 
-// Ignore whitespace and comments
+// =============================================================================
+// WHITESPACE - Ignored
+// =============================================================================
+
 %import common.WS
 %ignore WS
 %ignore SINGLE_LINE_COMMENT

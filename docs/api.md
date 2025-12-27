@@ -4,7 +4,7 @@ This document provides comprehensive API documentation for StxScript's Python in
 
 ## Overview
 
-StxScript provides a Python API for programmatic transpilation of StxScript code to Clarity. This is useful for:
+StxScript provides a Python API for programmatic transpilation, testing, and package management. This is useful for:
 
 - Building development tools
 - Integrating with build systems
@@ -31,13 +31,11 @@ clarity_code = transpiler.transpile(stx_code)
 print(clarity_code)  # Output: (define-data-var balance uint u100)
 ```
 
-## API Reference
-
-### StxScriptTranspiler
+## StxScriptTranspiler
 
 The main class for transpiling StxScript code to Clarity.
 
-#### Constructor
+### Constructor
 
 ```python
 StxScriptTranspiler()
@@ -45,14 +43,9 @@ StxScriptTranspiler()
 
 Creates a new transpiler instance with default configuration.
 
-**Example:**
-```python
-transpiler = StxScriptTranspiler()
-```
+### Methods
 
-#### Methods
-
-##### `transpile(stxscript: str) -> str`
+#### `transpile(stxscript: str) -> str`
 
 Transpiles StxScript source code to Clarity.
 
@@ -63,8 +56,7 @@ Transpiles StxScript source code to Clarity.
 - `str`: The generated Clarity code
 
 **Raises:**
-- `ValueError`: If the source code contains syntax errors
-- `lark.exceptions.UnexpectedToken`: If the parser encounters unexpected tokens
+- `lark.exceptions.UnexpectedToken`: If the parser encounters syntax errors
 
 **Example:**
 ```python
@@ -83,344 +75,246 @@ result = transpiler.transpile(code)
 print(result)
 ```
 
-## Advanced Usage
+#### `transpile_with_error_handling(stxscript: str) -> TranspileResult`
 
-### Error Handling
+Transpiles with structured error reporting.
 
+**Returns:**
+- `TranspileResult`: Object with `success`, `code`, `errors`, and `warnings` fields
+
+**Example:**
 ```python
-from stxscript import StxScriptTranspiler
-from lark.exceptions import UnexpectedToken
-
-transpiler = StxScriptTranspiler()
-
-try:
-    result = transpiler.transpile("invalid syntax here")
-except UnexpectedToken as e:
-    print(f"Syntax error: {e}")
-except ValueError as e:
-    print(f"Semantic error: {e}")
+result = transpiler.transpile_with_error_handling(code)
+if result.success:
+    print(result.code)
+else:
+    for error in result.errors:
+        print(f"Error at line {error.line}: {error.message}")
 ```
 
-### Processing Multiple Files
+## Testing Framework
+
+The testing module provides utilities for testing StxScript contracts.
+
+### Import
 
 ```python
-import os
-from stxscript import StxScriptTranspiler
-
-def transpile_directory(input_dir, output_dir):
-    """Transpile all .stx files in a directory."""
-    transpiler = StxScriptTranspiler()
-
-    for filename in os.listdir(input_dir):
-        if filename.endswith('.stx'):
-            input_path = os.path.join(input_dir, filename)
-            output_path = os.path.join(output_dir, filename.replace('.stx', '.clar'))
-
-            with open(input_path, 'r') as f:
-                stx_code = f.read()
-
-            try:
-                clarity_code = transpiler.transpile(stx_code)
-
-                with open(output_path, 'w') as f:
-                    f.write(clarity_code)
-
-                print(f"Transpiled {filename} -> {os.path.basename(output_path)}")
-
-            except Exception as e:
-                print(f"Error transpiling {filename}: {e}")
-
-# Usage
-transpile_directory('src/contracts', 'build/contracts')
+from stxscript.testing import (
+    ContractTestCase,
+    ClarityValue,
+    Assertions,
+    MockContractCall,
+    MockBlockchain,
+    TestRunner
+)
 ```
 
-### Integration with Build Systems
+### ContractTestCase
 
-#### Using with Make
+Base class for contract test cases.
 
 ```python
-# build.py
-import sys
-from stxscript import StxScriptTranspiler
-
-def main():
-    if len(sys.argv) != 3:
-        print("Usage: python build.py <input.stx> <output.clar>")
-        sys.exit(1)
-
-    input_file, output_file = sys.argv[1], sys.argv[2]
-
-    transpiler = StxScriptTranspiler()
-
-    try:
-        with open(input_file, 'r') as f:
-            stx_code = f.read()
-
-        clarity_code = transpiler.transpile(stx_code)
-
-        with open(output_file, 'w') as f:
-            f.write(clarity_code)
-
-        print(f"Successfully transpiled {input_file} to {output_file}")
-
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
-
-if __name__ == "__main__":
-    main()
-```
-
-#### Using with Poetry Scripts
-
-Add to your `pyproject.toml`:
-
-```toml
-[tool.poetry.scripts]
-build-contracts = "scripts.build:main"
-```
-
-### Custom Transpiler Wrapper
-
-```python
-from stxscript import StxScriptTranspiler
-from pathlib import Path
-import json
-
-class StxScriptBuilder:
-    """Enhanced wrapper around StxScriptTranspiler with additional features."""
-
-    def __init__(self, config_file=None):
-        self.transpiler = StxScriptTranspiler()
-        self.config = self._load_config(config_file)
-
-    def _load_config(self, config_file):
-        """Load configuration from JSON file."""
-        if config_file and Path(config_file).exists():
-            with open(config_file) as f:
-                return json.load(f)
-        return {}
-
-    def transpile_with_metadata(self, stx_code, source_file=None):
-        """Transpile code and return metadata about the process."""
-        try:
-            clarity_code = self.transpiler.transpile(stx_code)
-
-            return {
-                'success': True,
-                'clarity_code': clarity_code,
-                'source_file': source_file,
-                'line_count': len(stx_code.splitlines()),
-                'output_size': len(clarity_code)
-            }
-        except Exception as e:
-            return {
-                'success': False,
-                'error': str(e),
-                'source_file': source_file
-            }
-
-    def batch_transpile(self, files):
-        """Transpile multiple files and return results."""
-        results = []
-
-        for file_path in files:
-            with open(file_path) as f:
-                content = f.read()
-
-            result = self.transpile_with_metadata(content, file_path)
-            results.append(result)
-
-        return results
-
-# Usage
-builder = StxScriptBuilder('config.json')
-files = ['contract1.stx', 'contract2.stx']
-results = builder.batch_transpile(files)
-
-for result in results:
-    if result['success']:
-        print(f"✓ {result['source_file']}: {result['output_size']} chars")
-    else:
-        print(f"✗ {result['source_file']}: {result['error']}")
-```
-
-## Testing with the API
-
-```python
-import unittest
-from stxscript import StxScriptTranspiler
-
-class TestStxScriptAPI(unittest.TestCase):
+class TestMyContract(ContractTestCase):
     def setUp(self):
-        self.transpiler = StxScriptTranspiler()
+        self.load_contract_file('contract.stx')
 
-    def assert_transpiles_to(self, stx_code, expected_clarity):
-        """Helper method for testing transpilation."""
-        result = self.transpiler.transpile(stx_code)
-        self.assertEqual(result.strip(), expected_clarity.strip())
-
-    def test_variable_declaration(self):
-        self.assert_transpiles_to(
-            "let balance: uint = 100u;",
-            "(define-data-var balance uint u100)"
-        )
-
-    def test_constant_declaration(self):
-        self.assert_transpiles_to(
-            "const MAX_SUPPLY: uint = 1000000u;",
-            "(define-constant MAX_SUPPLY u1000000)"
-        )
-
-    def test_multiple_statements(self):
-        stx_code = """
-        const NAME: string = "Token";
-        let supply: uint = 0u;
-        """
-        expected = """(define-constant NAME "Token")
-(define-data-var supply uint u0)"""
-
-        self.assert_transpiles_to(stx_code, expected)
-
-    def test_error_handling(self):
-        with self.assertRaises(Exception):
-            self.transpiler.transpile("invalid syntax")
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_something(self):
+        # Test code here
+        pass
 ```
 
-## Environment Variables
+### ClarityValue
 
-The API respects these environment variables:
-
-- `STXSCRIPT_DEBUG`: Enable debug logging
-- `STXSCRIPT_CACHE_DIR`: Directory for caching compiled grammars
+Represents a Clarity value for testing.
 
 ```python
-import os
-os.environ['STXSCRIPT_DEBUG'] = '1'
+# Create values
+integer = ClarityValue.int(-42)
+unsigned = ClarityValue.uint(100)
+boolean = ClarityValue.bool(True)
+string = ClarityValue.string("Hello")
+principal = ClarityValue.principal("'SP2...")
 
-from stxscript import StxScriptTranspiler
-transpiler = StxScriptTranspiler()  # Now with debug logging
+# Create complex values
+optional_some = ClarityValue.some(ClarityValue.uint(42))
+optional_none = ClarityValue.none()
+response_ok = ClarityValue.ok(ClarityValue.bool(True))
+response_err = ClarityValue.err(ClarityValue.uint(1))
+list_val = ClarityValue.list([ClarityValue.uint(1), ClarityValue.uint(2)])
+tuple_val = ClarityValue.tuple({"name": ClarityValue.string("Alice")})
 ```
 
-## Performance Considerations
+### Assertions
 
-### Reusing Transpiler Instances
+Assertion helpers for Clarity types.
 
 ```python
-# Good: Reuse transpiler instance
-transpiler = StxScriptTranspiler()
-for code in code_samples:
-    result = transpiler.transpile(code)
+# Check response types
+Assertions.is_ok(result)
+Assertions.is_err(result)
+Assertions.ok_equals(result, expected_value)
+Assertions.err_equals(result, expected_value)
 
-# Avoid: Creating new instances repeatedly
-for code in code_samples:
-    transpiler = StxScriptTranspiler()  # Expensive!
-    result = transpiler.transpile(code)
+# Check optional types
+Assertions.is_some(optional)
+Assertions.is_none(optional)
+
+# Check equality
+Assertions.equals(actual, expected)
 ```
 
-### Memory Usage
+### MockBlockchain
 
-For large batches of files, consider processing in chunks:
+Mock blockchain state for testing.
 
 ```python
-def process_large_batch(files, chunk_size=100):
-    transpiler = StxScriptTranspiler()
+from stxscript.testing import MockBlockchain
 
-    for i in range(0, len(files), chunk_size):
-        chunk = files[i:i + chunk_size]
-        for file_path in chunk:
-            # Process file
-            pass
-        # Optional: Force garbage collection
-        import gc
-        gc.collect()
+blockchain = MockBlockchain()
+
+# Set block height
+blockchain.set_block_height(100)
+
+# Set balances
+blockchain.set_stx_balance("'SP2...", 1000000)
+
+# Set data variables
+blockchain.set_var("total_supply", ClarityValue.uint(1000))
+
+# Set map entries
+blockchain.set_map_entry("balances", "'SP2...", ClarityValue.uint(500))
+
+# Mine blocks
+blockchain.mine_block(10)
 ```
 
-## Integration Examples
+### MockContractCall
 
-### Flask Web API
+Mock for contract calls.
 
 ```python
-from flask import Flask, request, jsonify
-from stxscript import StxScriptTranspiler
+from stxscript.testing import MockContractCall
 
-app = Flask(__name__)
-transpiler = StxScriptTranspiler()
+mock = MockContractCall()
 
-@app.route('/transpile', methods=['POST'])
-def transpile_endpoint():
-    try:
-        stx_code = request.json['code']
-        clarity_code = transpiler.transpile(stx_code)
-        return jsonify({
-            'success': True,
-            'clarity_code': clarity_code
-        })
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 400
+# Set up mock response
+mock.when("Token", "transfer").returns(ClarityValue.ok(ClarityValue.bool(True)))
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Verify calls
+mock.verify_called("Token", "transfer", times=1)
 ```
 
-### Django Integration
+### TestRunner
+
+Runs test suites.
 
 ```python
-# views.py
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from stxscript import StxScriptTranspiler
-import json
+from stxscript.testing import TestRunner
 
-transpiler = StxScriptTranspiler()
+runner = TestRunner()
+results = runner.run_suite(TestMyContract)
+runner.print_results()
 
-@csrf_exempt
-@require_http_methods(["POST"])
-def transpile_view(request):
-    try:
-        data = json.loads(request.body)
-        stx_code = data['code']
-        clarity_code = transpiler.transpile(stx_code)
-
-        return JsonResponse({
-            'success': True,
-            'clarity_code': clarity_code
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        }, status=400)
+# Export as JSON
+json_output = runner.to_json()
 ```
 
-## Error Reference
+## Package Manager
 
-### Common Exceptions
+The package manager provides dependency management.
 
-| Exception | Description | Common Causes |
-|-----------|-------------|---------------|
-| `UnexpectedToken` | Parser encountered unexpected syntax | Invalid StxScript syntax |
-| `ValueError` | Semantic analysis failed | Type errors, undefined variables |
-| `FileNotFoundError` | Grammar file not found | Installation issues |
-| `MemoryError` | Out of memory | Very large files |
+### Import
 
-### Error Handling Best Practices
+```python
+from stxscript.package_manager import (
+    PackageManager,
+    Version,
+    VersionRequirement,
+    PackageManifest
+)
+```
+
+### PackageManager
+
+```python
+pm = PackageManager(".")
+
+# Initialize a new project
+pm.init(name="my-project")
+
+# Load existing project
+pm.load()
+
+# Add a dependency
+pm.add("some-package", version="^1.0.0")
+
+# Remove a dependency
+pm.remove("some-package")
+
+# Install all dependencies
+pm.install()
+
+# List packages
+packages = pm.list()
+for name, version, status in packages:
+    print(f"{name}: {version} ({status})")
+```
+
+### Version
+
+```python
+from stxscript.package_manager import Version
+
+v = Version.parse("1.2.3-beta.1")
+print(v.major)       # 1
+print(v.minor)       # 2
+print(v.patch)       # 3
+print(v.prerelease)  # "beta.1"
+
+# Compare versions
+v1 = Version.parse("1.0.0")
+v2 = Version.parse("2.0.0")
+print(v1 < v2)  # True
+```
+
+### VersionRequirement
+
+```python
+from stxscript.package_manager import VersionRequirement, Version
+
+req = VersionRequirement.parse("^1.2.0")
+v1 = Version.parse("1.3.0")
+v2 = Version.parse("2.0.0")
+
+print(req.satisfies(v1))  # True (same major, >= 1.2.0)
+print(req.satisfies(v2))  # False (different major)
+```
+
+## LSP Server
+
+The LSP server provides IDE integration.
+
+### Running the Server
+
+```bash
+stxscript-lsp
+```
+
+Or programmatically:
+
+```python
+from stxscript.lsp_server import main
+main()
+```
+
+## Error Handling
 
 ```python
 from stxscript import StxScriptTranspiler
 from lark.exceptions import LarkError
 
 def safe_transpile(stx_code):
-    """Safely transpile code with comprehensive error handling."""
     transpiler = StxScriptTranspiler()
-
     try:
         return {
             'success': True,
@@ -432,18 +326,47 @@ def safe_transpile(stx_code):
             'error_type': 'syntax_error',
             'message': str(e)
         }
-    except ValueError as e:
-        return {
-            'success': False,
-            'error_type': 'semantic_error',
-            'message': str(e)
-        }
-    except Exception as e:
-        return {
-            'success': False,
-            'error_type': 'unknown_error',
-            'message': str(e)
-        }
+```
+
+## Complete Example
+
+```python
+from stxscript import StxScriptTranspiler
+from stxscript.testing import ContractTestCase, ClarityValue, Assertions
+from stxscript.package_manager import PackageManager
+
+# Transpile a contract
+transpiler = StxScriptTranspiler()
+code = """
+const MAX_SUPPLY: uint = 1000000u;
+let total_supply: uint = 0u;
+
+@public
+function mint(amount: uint): Response<bool, uint> {
+    if (total_supply + amount > MAX_SUPPLY) {
+        return err(1u);
+    }
+    total_supply = total_supply + amount;
+    return ok(true);
+}
+"""
+clarity = transpiler.transpile(code)
+print(clarity)
+
+# Test the contract
+class TestMint(ContractTestCase):
+    def setUp(self):
+        self.load_contract(code)
+
+    def test_mint_within_limit(self):
+        result = ClarityValue.ok(ClarityValue.bool(True))
+        Assertions.is_ok(result)
+
+# Run tests
+from stxscript.testing import TestRunner
+runner = TestRunner()
+runner.run_suite(TestMint)
+runner.print_results()
 ```
 
 ## See Also

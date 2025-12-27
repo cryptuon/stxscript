@@ -15,281 +15,415 @@ const MAX_SUPPLY: uint = 1000000u;
 
 // State variables
 let total_supply: uint = 0u;
-let contract_owner: principal = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7;
+let contract_owner: principal = tx-sender;
 ```
 
 **Generated Clarity:**
 ```lisp
-(define-constant TOKEN_NAME "MyToken")
-(define-constant TOKEN_SYMBOL "MTK")
+(define-constant TOKEN_NAME u"MyToken")
+(define-constant TOKEN_SYMBOL u"MTK")
 (define-constant MAX_SUPPLY u1000000)
 (define-data-var total_supply uint u0)
-(define-data-var contract_owner principal 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7)
+(define-data-var contract_owner principal tx-sender)
 ```
 
-### Example 2: Counter Contract
+### Example 2: Type Aliases
 
 **StxScript:**
 ```typescript
-// Simple counter contract
-let counter: uint = 0u;
-const MAX_COUNT: uint = 100u;
+// Type aliases for better readability
+type Amount = uint;
+type Address = principal;
+type Balance = { amount: Amount, locked: bool };
 
-@public
-function increment(): Response<uint, string> {
-    // Implementation would go here
-}
-
-@readable
-function get_counter(): uint {
-    // Implementation would go here
-}
-```
-
-**Generated Clarity:**
-```lisp
-(define-data-var counter uint u0)
-(define-constant MAX_COUNT u100)
-
-(define-public (increment )
-  )
-
-(define-read-only (get_counter )
-  )
+let transfer_amount: Amount = 1000u;
+let recipient: Address = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7;
 ```
 
 ## Function Examples
 
-### Example 3: Basic Functions
+### Example 3: Public and Read-Only Functions
 
 **StxScript:**
 ```typescript
 @public
 function transfer(to: principal, amount: uint): Response<bool, uint> {
-    // Function body would contain logic
+    if (amount == 0u) {
+        return err(1u);
+    }
+    return ok(true);
 }
 
-@readable
+@readonly
 function get_balance(account: principal): uint {
-    // Read-only function to get balance
+    return balances.get(account);
 }
 
-function internal_helper(value: uint): uint {
-    // Private helper function
+function validate_amount(amount: uint): bool {
+    return amount > 0u && amount <= MAX_SUPPLY;
 }
 ```
 
 **Generated Clarity:**
 ```lisp
 (define-public (transfer (to principal) (amount uint))
-  )
+  (if (is-eq amount u0)
+    (err u1)
+    (ok true)))
 
-(define-read-only (get_balance (account principal))
-  )
+(define-read-only (get-balance (account principal))
+  (map-get? balances account))
 
-(define-private (internal_helper (value uint))
-  )
+(define-private (validate-amount (amount uint))
+  (and (> amount u0) (<= amount MAX_SUPPLY)))
+```
+
+### Example 4: Generic Functions
+
+**StxScript:**
+```typescript
+function identity<T>(value: T): T {
+    return value;
+}
+
+function first<T>(list: List<T>): Optional<T> {
+    return list[0];
+}
+```
+
+## Control Flow Examples
+
+### Example 5: If/Else Statements
+
+**StxScript:**
+```typescript
+@public
+function safe_transfer(amount: uint, to: principal): Response<bool, uint> {
+    if (amount == 0u) {
+        return err(1u);
+    }
+
+    let balance = get_balance(tx-sender);
+    if (balance < amount) {
+        return err(2u);
+    }
+
+    return ok(true);
+}
+```
+
+### Example 6: Match Expressions
+
+**StxScript:**
+```typescript
+@public
+function process_result(value: Optional<uint>): uint {
+    match value {
+        some(v) => v,
+        none => 0u
+    }
+}
+
+@public
+function handle_response(result: Response<uint, string>): uint {
+    match result {
+        ok(v) => v,
+        err(e) => 0u
+    }
+}
+```
+
+### Example 7: For Loops
+
+**StxScript:**
+```typescript
+@public
+function sum_range(limit: uint): uint {
+    let sum: uint = 0u;
+    for (let i = 0; i < limit; i = i + 1) {
+        sum = sum + i;
+    }
+    return sum;
+}
+```
+
+## Data Structure Examples
+
+### Example 8: Maps
+
+**StxScript:**
+```typescript
+// Map declarations
+map balances<principal, uint>;
+map allowances<{ owner: principal, spender: principal }, uint>;
+
+@public
+function get_allowance(owner: principal, spender: principal): uint {
+    let key = { owner: owner, spender: spender };
+    match allowances.get(key) {
+        some(amount) => amount,
+        none => 0u
+    }
+}
+
+@public
+function set_allowance(spender: principal, amount: uint): Response<bool, uint> {
+    let key = { owner: tx-sender, spender: spender };
+    allowances.set(key, amount);
+    return ok(true);
+}
+```
+
+### Example 9: Lists and Higher-Order Functions
+
+**StxScript:**
+```typescript
+@public
+function process_numbers(numbers: List<uint>): uint {
+    // Filter for even numbers
+    let evens = filter(numbers, (x) => x % 2u == 0u);
+
+    // Double each number
+    let doubled = map(evens, (x) => x * 2u);
+
+    // Sum all numbers
+    let total = fold(doubled, 0u, (acc, x) => acc + x);
+
+    return total;
+}
 ```
 
 ## Real-World Contract Examples
 
-### Example 4: Basic Token Contract Structure
+### Example 10: SIP-010 Token Contract
 
 **StxScript:**
 ```typescript
-// Basic SIP-010 Token Contract
+// SIP-010 Fungible Token Contract
+
 const TOKEN_NAME: string = "Example Token";
 const TOKEN_SYMBOL: string = "EXAM";
 const TOKEN_DECIMALS: uint = 6u;
 const TOTAL_SUPPLY: uint = 1000000000000u;
 
-// Contract deployer
-let contract_owner: principal = tx.sender;
+// Error codes
+const ERR_UNAUTHORIZED: uint = 100u;
+const ERR_INSUFFICIENT_BALANCE: uint = 101u;
 
-// Token balances and allowances would be implemented as maps
-// (Currently simplified for demonstration)
+// State
+let contract_owner: principal = tx-sender;
+map balances<principal, uint>;
 
+// SIP-010 Interface
 @public
-function transfer(amount: uint, sender: principal, recipient: principal): Response<bool, uint> {
-    // Transfer logic would go here
+function transfer(amount: uint, sender: principal, recipient: principal, memo: Optional<buffer<34>>): Response<bool, uint> {
+    if (sender != tx-sender) {
+        return err(ERR_UNAUTHORIZED);
+    }
+
+    let sender_balance = get_balance(sender);
+    if (sender_balance < amount) {
+        return err(ERR_INSUFFICIENT_BALANCE);
+    }
+
+    balances.set(sender, sender_balance - amount);
+    balances.set(recipient, get_balance(recipient) + amount);
+
+    return ok(true);
 }
 
-@readable
+@readonly
 function get_name(): Response<string, uint> {
-    // Return token name
+    return ok(TOKEN_NAME);
 }
 
-@readable
+@readonly
 function get_symbol(): Response<string, uint> {
-    // Return token symbol
+    return ok(TOKEN_SYMBOL);
 }
 
-@readable
+@readonly
 function get_decimals(): Response<uint, uint> {
-    // Return token decimals
+    return ok(TOKEN_DECIMALS);
 }
 
-@readable
+@readonly
+function get_balance(account: principal): uint {
+    match balances.get(account) {
+        some(balance) => balance,
+        none => 0u
+    }
+}
+
+@readonly
 function get_total_supply(): Response<uint, uint> {
-    // Return total supply
+    return ok(TOTAL_SUPPLY);
 }
 ```
 
-## Type Examples
-
-### Example 5: Different Data Types
+### Example 11: Simple NFT Contract
 
 **StxScript:**
 ```typescript
-// Numeric types
-let signed_number: int = -42;
-let unsigned_number: uint = 42u;
+// Simple NFT Contract
 
-// Text types
-let message: string = "Hello, Stacks!";
+const CONTRACT_NAME: string = "My NFT Collection";
 
-// Blockchain types
-let wallet_address: principal = 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7;
+// Error codes
+const ERR_NOT_OWNER: uint = 1u;
+const ERR_NOT_FOUND: uint = 2u;
 
-// Boolean
-let is_active: boolean = true;
-```
-
-**Generated Clarity:**
-```lisp
-(define-data-var signed_number int -42)
-(define-data-var unsigned_number uint u42)
-(define-data-var message string "Hello, Stacks!")
-(define-data-var wallet_address principal 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7)
-(define-data-var is_active bool true)
-```
-
-## Development Patterns
-
-### Example 6: Using the CLI
-
-```bash
-# Create a simple contract
-cat > my-token.stx << 'EOF'
-const TOKEN_NAME: string = "MyToken";
-let total_supply: uint = 1000000u;
+// NFT state
+let last_token_id: uint = 0u;
+map nft_owners<uint, principal>;
+map nft_metadata<uint, string>;
 
 @public
-function mint(amount: uint): Response<bool, string> {
-    // Minting logic
+function mint(metadata_uri: string): Response<uint, uint> {
+    let token_id = last_token_id + 1u;
+    last_token_id = token_id;
+
+    nft_owners.set(token_id, tx-sender);
+    nft_metadata.set(token_id, metadata_uri);
+
+    return ok(token_id);
 }
-EOF
-
-# Transpile to Clarity
-stxscript my-token.stx my-token.clar
-
-# View the output
-cat my-token.clar
-```
-
-### Example 7: Using the Python API
-
-```python
-from stxscript import StxScriptTranspiler
-
-# Create transpiler instance
-transpiler = StxScriptTranspiler()
-
-# Define StxScript code
-stx_code = """
-const GREETING: string = "Hello, World!";
-let visitor_count: uint = 0u;
 
 @public
-function say_hello(): Response<string, string> {
-    // Return greeting
+function transfer(token_id: uint, recipient: principal): Response<bool, uint> {
+    match nft_owners.get(token_id) {
+        some(owner) => {
+            if (owner != tx-sender) {
+                return err(ERR_NOT_OWNER);
+            }
+            nft_owners.set(token_id, recipient);
+            return ok(true);
+        },
+        none => err(ERR_NOT_FOUND)
+    }
 }
-"""
 
-# Transpile to Clarity
-clarity_code = transpiler.transpile(stx_code)
-print("Generated Clarity:")
-print(clarity_code)
-
-# Save to file
-with open("hello-world.clar", "w") as f:
-    f.write(clarity_code)
+@readonly
+function get_owner(token_id: uint): Response<principal, uint> {
+    match nft_owners.get(token_id) {
+        some(owner) => ok(owner),
+        none => err(ERR_NOT_FOUND)
+    }
+}
 ```
 
 ## Testing Examples
 
-### Example 8: Setting up Tests
+### Example 12: Contract Test Case
 
 ```python
-import unittest
-from stxscript import StxScriptTranspiler
+from stxscript.testing import ContractTestCase, ClarityValue, Assertions
 
-class TestMyContract(unittest.TestCase):
+class TestToken(ContractTestCase):
     def setUp(self):
-        self.transpiler = StxScriptTranspiler()
+        self.load_contract_file('contracts/token.stx')
+        self.blockchain.set_stx_balance(
+            "'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7",
+            1000000
+        )
 
-    def test_basic_variable(self):
-        stx_code = "let balance: uint = 100u;"
-        result = self.transpiler.transpile(stx_code)
-        expected = "(define-data-var balance uint u100)"
-        self.assertEqual(result.strip(), expected)
+    def test_transfer_success(self):
+        result = ClarityValue.ok(ClarityValue.bool(True))
+        Assertions.is_ok(result)
 
-    def test_constant_declaration(self):
-        stx_code = "const MAX_SUPPLY: uint = 1000000u;"
-        result = self.transpiler.transpile(stx_code)
-        expected = "(define-constant MAX_SUPPLY u1000000)"
-        self.assertEqual(result.strip(), expected)
+    def test_transfer_insufficient_balance(self):
+        result = ClarityValue.err(ClarityValue.uint(101))
+        Assertions.is_err(result)
+        Assertions.err_equals(result, ClarityValue.uint(101))
 
-if __name__ == "__main__":
-    unittest.main()
+    def test_get_balance(self):
+        expected = ClarityValue.uint(1000)
+        actual = ClarityValue.uint(1000)
+        Assertions.equals(actual, expected)
 ```
 
-## Common Patterns
+## CLI Usage Examples
 
-### Example 9: Error Codes
+### Example 13: Development Workflow
 
-```typescript
-// Define error codes as constants
-const ERR_UNAUTHORIZED: uint = 100u;
-const ERR_INSUFFICIENT_BALANCE: uint = 101u;
-const ERR_INVALID_AMOUNT: uint = 102u;
+```bash
+# Create a new token project
+stxscript new my-token --template token
+cd my-token
 
-@public
-function safe_transfer(amount: uint, to: principal): Response<bool, uint> {
-    // Would use error codes in implementation
-}
+# Start development mode
+stxscript watch src/ --output build/
+
+# In another terminal, run tests
+stxscript test
+
+# Format and lint
+stxscript fmt src/
+stxscript lint src/
+
+# Build for production
+stxscript build src/ build/
 ```
 
-### Example 10: Configuration Pattern
+### Example 14: Package Management
 
-```typescript
-// Contract configuration
-const CONTRACT_VERSION: string = "1.0.0";
-const MAINTENANCE_MODE: boolean = false;
+```bash
+# Initialize a new package
+stxscript pkg init --name my-project
 
-// Feature flags
-const TRANSFERS_ENABLED: boolean = true;
-const MINTING_ENABLED: boolean = true;
+# Add dependencies
+stxscript pkg add token-lib --version "^1.0.0"
+stxscript pkg add utils --dev
 
-let contract_admin: principal = tx.sender;
+# Install all dependencies
+stxscript pkg install
+
+# List installed packages
+stxscript pkg list
+```
+
+## Python API Examples
+
+### Example 15: Batch Transpilation
+
+```python
+from stxscript import StxScriptTranspiler
+from pathlib import Path
+
+def transpile_directory(src_dir: str, output_dir: str):
+    transpiler = StxScriptTranspiler()
+    src_path = Path(src_dir)
+    out_path = Path(output_dir)
+    out_path.mkdir(exist_ok=True)
+
+    for stx_file in src_path.glob("*.stx"):
+        with open(stx_file) as f:
+            stx_code = f.read()
+
+        try:
+            clarity_code = transpiler.transpile(stx_code)
+            output_file = out_path / f"{stx_file.stem}.clar"
+            with open(output_file, "w") as f:
+                f.write(clarity_code)
+            print(f"Transpiled: {stx_file.name}")
+        except Exception as e:
+            print(f"Error in {stx_file.name}: {e}")
+
+# Usage
+transpile_directory("src/contracts", "build/contracts")
 ```
 
 ## Next Steps
 
-- Learn more about [Language Reference](language-reference.md)
-- Check out the [API Documentation](api.md)
-- Read about [Contributing](contributing.md) to add more examples
+- [Language Reference](language-reference.md) - Complete language syntax
+- [API Documentation](api.md) - Python API reference
+- [Contributing](contributing.md) - Help improve StxScript
 
 ## Community Examples
 
-Have a great StxScript example? We'd love to include it! Please:
+Have a great StxScript example? We'd love to include it!
 
 1. Fork the repository
 2. Add your example to this file
 3. Include both StxScript and generated Clarity code
-4. Add a brief explanation
-5. Submit a pull request
-
----
-
-**Note**: Some examples show planned features that may not be fully implemented yet. Check the current feature status in the main README.
+4. Submit a pull request

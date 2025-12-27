@@ -1,6 +1,6 @@
 # CLI Reference
 
-The StxScript command-line interface provides tools for transpiling StxScript files to Clarity.
+The StxScript command-line interface provides comprehensive tools for transpiling, testing, and managing StxScript projects.
 
 ## Installation
 
@@ -10,43 +10,173 @@ The CLI is automatically available after installing StxScript:
 pip install stxscript
 ```
 
-## Basic Usage
+## Quick Reference
 
 ```bash
-# Transpile a file
-stxscript input.stx output.clar
-
-# Transpile to stdout
-stxscript input.stx
-
-# Read from stdin
-echo "let x: uint = 42u;" | stxscript
-
-# Read from stdin explicitly
-stxscript - output.clar
+stxscript build <input> [output]   # Transpile to Clarity
+stxscript fmt <files>              # Format code
+stxscript lint <files>             # Static analysis
+stxscript check <files>            # Syntax validation
+stxscript new <name>               # Create new project
+stxscript watch <path>             # Watch mode
+stxscript doc <input>              # Generate docs
+stxscript test [path]              # Run tests
+stxscript pkg <command>            # Package management
 ```
 
-## Command Reference
+## Commands
 
-### Synopsis
+### build - Transpile StxScript to Clarity
 
 ```bash
-stxscript [OPTIONS] [INPUT] [OUTPUT]
+stxscript build <input> [output]
+
+# Examples
+stxscript build contract.stx                    # Output to stdout
+stxscript build contract.stx contract.clar      # Output to file
+stxscript build src/                            # Transpile directory
+stxscript build - output.clar                   # Read from stdin
+
+# Options
+--check         Check syntax only, don't generate output
+--optimize      Enable code optimizations
+-v, --verbose   Verbose output
 ```
 
-### Arguments
+### fmt - Format Code
 
-- `INPUT` - Input StxScript file path, or `-` for stdin (optional)
-- `OUTPUT` - Output Clarity file path (optional, defaults to stdout)
+```bash
+stxscript fmt <files>
 
-### Options
+# Examples
+stxscript fmt contract.stx           # Format single file
+stxscript fmt src/                   # Format directory
+stxscript fmt *.stx                  # Format with glob
 
-| Option | Description |
-|--------|-------------|
-| `--version` | Show version information and exit |
-| `--check` | Check syntax only, don't generate output |
-| `--verbose`, `-v` | Enable verbose output |
-| `--help`, `-h` | Show help message and exit |
+# Options
+--check         Check if files are formatted (exit 1 if not)
+--diff          Show diff of formatting changes
+--config FILE   Path to formatter config file
+```
+
+### lint - Static Analysis
+
+```bash
+stxscript lint <files>
+
+# Examples
+stxscript lint contract.stx          # Lint single file
+stxscript lint src/                  # Lint directory
+
+# Options
+--fix           Automatically fix issues where possible
+--config FILE   Path to linter config file
+--format FORMAT Output format (text or json)
+```
+
+### check - Syntax Validation
+
+```bash
+stxscript check <files>
+
+# Examples
+stxscript check contract.stx         # Check single file
+stxscript check src/                 # Check directory
+```
+
+### new - Create New Project
+
+```bash
+stxscript new <name>
+
+# Examples
+stxscript new my-project             # Create with basic template
+stxscript new my-token --template token    # Use token template
+stxscript new my-nft --template nft        # Use NFT template
+
+# Options
+--template TYPE  Template to use (basic, nft, token, defi)
+--path DIR       Directory to create project in
+```
+
+### watch - Development Mode
+
+```bash
+stxscript watch [path]
+
+# Examples
+stxscript watch                      # Watch current directory
+stxscript watch src/                 # Watch specific directory
+
+# Options
+--output DIR     Output directory for transpiled files
+--ignore PATTERN Patterns to ignore (can repeat)
+```
+
+### doc - Generate Documentation
+
+```bash
+stxscript doc <input>
+
+# Examples
+stxscript doc contract.stx           # Generate docs for file
+stxscript doc src/                   # Generate docs for directory
+
+# Options
+--output DIR     Output directory (default: docs/)
+--format FORMAT  Output format (html or markdown)
+```
+
+### test - Run Contract Tests
+
+```bash
+stxscript test [path]
+
+# Examples
+stxscript test                       # Run tests in tests/
+stxscript test tests/                # Specify test directory
+stxscript test tests/test_token.py   # Run specific test file
+
+# Options
+--pattern PATTERN  Test file pattern (default: test_*.py)
+--coverage         Enable coverage tracking
+--json             Output results as JSON
+```
+
+### pkg - Package Management
+
+```bash
+stxscript pkg <command>
+
+# Initialize a new package
+stxscript pkg init
+stxscript pkg init --name my-package
+
+# Add a dependency
+stxscript pkg add some-package
+stxscript pkg add some-package --version "^1.0.0"
+stxscript pkg add some-package --dev    # Add as dev dependency
+
+# Remove a dependency
+stxscript pkg remove some-package
+stxscript pkg remove some-package --dev
+
+# Install all dependencies
+stxscript pkg install
+
+# List installed packages
+stxscript pkg list
+```
+
+## Global Options
+
+These options work with all commands:
+
+```bash
+--version       Show version information
+--verbose, -v   Enable verbose output
+--help, -h      Show help message
+```
 
 ## Examples
 
@@ -57,78 +187,50 @@ stxscript [OPTIONS] [INPUT] [OUTPUT]
 cat > token.stx << 'EOF'
 const TOKEN_NAME: string = "MyToken";
 let total_supply: uint = 1000u;
+
+@public
+function get_name(): Response<string, uint> {
+    return ok(TOKEN_NAME);
+}
 EOF
 
 # Transpile to Clarity
-stxscript token.stx token.clar
+stxscript build token.stx token.clar
 
 # Check the output
 cat token.clar
 ```
 
-**Output:**
-```lisp
-(define-constant TOKEN_NAME "MyToken")
-(define-data-var total_supply uint u1000)
-```
-
-### Using Stdin/Stdout
+### Development Workflow
 
 ```bash
-# Pipe input
-echo 'const MAX_SUPPLY: uint = 1000000u;' | stxscript
+# Create a new project
+stxscript new my-token --template token
 
-# Chain with other tools
-cat contract.stx | stxscript | clarinet check --stdin
+# Navigate to project
+cd my-token
+
+# Start watch mode for development
+stxscript watch src/ --output build/
+
+# In another terminal, run tests
+stxscript test
 ```
 
-### Syntax Checking
+### CI/CD Integration
 
 ```bash
-# Check syntax without generating output
-stxscript --check contract.stx
+# Check syntax only
+stxscript check src/
 
-# Check with verbose output
-stxscript --check --verbose contract.stx
-```
+# Lint code
+stxscript lint src/
 
-### Verbose Mode
+# Ensure formatting
+stxscript fmt --check src/
 
-```bash
-# See detailed processing information
-stxscript --verbose contract.stx contract.clar
-```
-
-**Sample verbose output:**
-```
-Reading from contract.stx...
-Transpiling contract.stx...
-Generated contract.clar
-```
-
-## Error Handling
-
-The CLI provides clear error messages for common issues:
-
-### Syntax Errors
-
-```bash
-$ echo 'invalid syntax' | stxscript
-Error transpiling <stdin>: Unexpected token ...
-```
-
-### File Not Found
-
-```bash
-$ stxscript nonexistent.stx
-Error: File 'nonexistent.stx' not found
-```
-
-### Permission Errors
-
-```bash
-$ stxscript contract.stx /root/protected.clar
-Error writing output: Permission denied
+# Build all contracts
+stxscript build src/ build/
 ```
 
 ## Exit Codes
@@ -137,257 +239,106 @@ Error writing output: Permission denied
 |------|-------------|
 | 0 | Success |
 | 1 | Error (syntax, file not found, etc.) |
+| 130 | Interrupted by user (Ctrl+C) |
 
 ## Integration Examples
 
 ### Makefile Integration
 
 ```makefile
-# Makefile
-CONTRACTS_DIR = contracts
+CONTRACTS_DIR = src
 BUILD_DIR = build
 
-%.clar: $(CONTRACTS_DIR)/%.stx
-	@mkdir -p $(BUILD_DIR)
-	stxscript $< $(BUILD_DIR)/$@
+.PHONY: all build check lint fmt test clean
 
-all: token.clar governance.clar
+all: check lint build
+
+build:
+	stxscript build $(CONTRACTS_DIR) $(BUILD_DIR)
+
+check:
+	stxscript check $(CONTRACTS_DIR)
+
+lint:
+	stxscript lint $(CONTRACTS_DIR)
+
+fmt:
+	stxscript fmt $(CONTRACTS_DIR)
+
+test:
+	stxscript test
 
 clean:
 	rm -rf $(BUILD_DIR)
-
-.PHONY: all clean
-```
-
-### Shell Script
-
-```bash
-#!/bin/bash
-# build.sh - Build all contracts
-
-set -e
-
-CONTRACTS_DIR="contracts"
-BUILD_DIR="build"
-
-# Create build directory
-mkdir -p "$BUILD_DIR"
-
-# Process all .stx files
-for stx_file in "$CONTRACTS_DIR"/*.stx; do
-    if [[ -f "$stx_file" ]]; then
-        filename=$(basename "$stx_file" .stx)
-        output_file="$BUILD_DIR/${filename}.clar"
-
-        echo "Building $stx_file -> $output_file"
-
-        if stxscript "$stx_file" "$output_file"; then
-            echo "✓ Success"
-        else
-            echo "✗ Failed"
-            exit 1
-        fi
-    fi
-done
-
-echo "All contracts built successfully!"
-```
-
-### Poetry Script
-
-Add to your `pyproject.toml`:
-
-```toml
-[tool.poetry.scripts]
-build-contracts = "scripts.build:main"
-stx-check = "scripts.check:main"
-```
-
-Create `scripts/build.py`:
-
-```python
-import subprocess
-import sys
-from pathlib import Path
-
-def main():
-    """Build all StxScript contracts."""
-    contracts_dir = Path("contracts")
-    build_dir = Path("build")
-
-    if not contracts_dir.exists():
-        print("No contracts directory found")
-        return
-
-    build_dir.mkdir(exist_ok=True)
-
-    for stx_file in contracts_dir.glob("*.stx"):
-        output_file = build_dir / f"{stx_file.stem}.clar"
-
-        cmd = ["stxscript", str(stx_file), str(output_file)]
-        result = subprocess.run(cmd, capture_output=True, text=True)
-
-        if result.returncode == 0:
-            print(f"✓ {stx_file.name} -> {output_file.name}")
-        else:
-            print(f"✗ {stx_file.name}: {result.stderr.strip()}")
-            sys.exit(1)
-
-if __name__ == "__main__":
-    main()
 ```
 
 ### GitHub Actions Workflow
 
 ```yaml
-# .github/workflows/build.yml
-name: Build Contracts
+name: Build and Test
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.10'
 
     - name: Install StxScript
-      run: |
-        pip install stxscript
+      run: pip install stxscript
 
-    - name: Build contracts
-      run: |
-        mkdir -p build
-        for contract in contracts/*.stx; do
-          filename=$(basename "$contract" .stx)
-          stxscript "$contract" "build/${filename}.clar"
-        done
+    - name: Check syntax
+      run: stxscript check src/
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: clarity-contracts
-        path: build/
+    - name: Lint
+      run: stxscript lint src/
+
+    - name: Build
+      run: stxscript build src/ build/
+
+    - name: Test
+      run: stxscript test
 ```
 
-## Tips and Best Practices
-
-### File Organization
-
-```bash
-# Recommended project structure
-project/
-├── contracts/          # StxScript source files
-│   ├── token.stx
-│   └── governance.stx
-├── build/             # Generated Clarity files
-│   ├── token.clar
-│   └── governance.clar
-├── scripts/           # Build scripts
-└── tests/            # Test files
-```
-
-### Batch Processing
-
-```bash
-# Process multiple files
-for file in contracts/*.stx; do
-    output="build/$(basename "$file" .stx).clar"
-    stxscript "$file" "$output"
-done
-
-# Using find
-find contracts -name "*.stx" -exec stxscript {} build/{}.clar \;
-```
-
-### Watch Mode (External Tool)
-
-Use `entr` for automatic rebuilding:
-
-```bash
-# Install entr first: brew install entr
-
-# Watch for changes and rebuild
-find contracts -name "*.stx" | entr -s 'make build'
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**Command not found: stxscript**
-
-Solution:
-```bash
-# Check installation
-pip show stxscript
-
-# Reinstall if needed
-pip install --force-reinstall stxscript
-
-# Use module syntax as fallback
-python -m stxscript
-```
-
-**Permission denied**
-
-Solution:
-```bash
-# Check file permissions
-ls -la input.stx
-
-# Check directory permissions
-ls -la build/
-
-# Create directory if needed
-mkdir -p build
-```
-
-**Poetry script warnings**
-
-The warnings about uninstalled scripts are normal in development. To eliminate them:
-
-```bash
-poetry install
-```
-
-## Advanced Usage
-
-### Configuration File (Planned)
-
-Future versions will support configuration files:
+### Package.json Scripts
 
 ```json
 {
-  "input_dir": "contracts",
-  "output_dir": "build",
-  "include": ["*.stx"],
-  "exclude": ["**/test/**"],
-  "options": {
-    "verbose": true,
-    "check_only": false
+  "scripts": {
+    "build": "stxscript build src/ build/",
+    "check": "stxscript check src/",
+    "lint": "stxscript lint src/",
+    "fmt": "stxscript fmt src/",
+    "test": "stxscript test",
+    "watch": "stxscript watch src/ --output build/"
   }
 }
 ```
 
-### Multiple Input Files (Planned)
+## Configuration
 
-```bash
-# Process multiple files (planned feature)
-stxscript contracts/*.stx --output-dir build/
+### Package Manifest (stxscript.toml)
 
-# Watch mode (planned feature)
-stxscript --watch contracts/ --output-dir build/
+```toml
+[package]
+name = "my-stxscript-project"
+version = "0.1.0"
+description = "A StxScript project"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+
+[dependencies]
+# Add your dependencies here
+# example = "^1.0.0"
+
+[dev-dependencies]
+# Add development dependencies here
 ```
 
 ## See Also
