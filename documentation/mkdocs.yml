@@ -1,0 +1,84 @@
+site_name: StxScript
+site_description: A TypeScript-inspired transpiler for Clarity smart contracts on the Stacks blockchain
+site_url: https://cryptuon.github.io/stxscript
+repo_url: https://github.com/cryptuon/stxscript
+repo_name: cryptuon/stxscript
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Guide:
+    - Getting Started: guide/getting-started.md
+    - Project Setup: guide/project-setup.md
+    - Deployment: guide/deployment.md
+  - Language:
+    - Overview: language/overview.md
+    - Types: language/types.md
+    - Variables & Constants: language/variables.md
+    - Functions: language/functions.md
+    - Expressions: language/expressions.md
+    - Control Flow: language/control-flow.md
+    - Data Structures: language/data-structures.md
+    - Error Handling: language/error-handling.md
+    - Traits: language/traits.md
+    - Modules & Imports: language/modules.md
+  - Reference:
+    - CLI: reference/cli.md
+    - Python API: reference/api.md
+    - Clarity Mapping: reference/clarity-mapping.md
+    - Configuration: reference/configuration.md
+  - Tooling:
+    - IDE Setup: tooling/ide-setup.md
+    - Testing: tooling/testing.md
+    - Formatter & Linter: tooling/formatter-linter.md
+    - Package Manager: tooling/package-manager.md
+  - Examples: examples.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/cryptuon/stxscript

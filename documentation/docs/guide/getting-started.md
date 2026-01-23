@@ -177,7 +177,7 @@ let transfer_amount: Amount = 1000u;
 
 ## Next Steps
 
-- [Language Guide](language-guide.md) - Complete language reference
-- [CLI Reference](cli-reference.md) - All CLI commands
-- [Testing](testing.md) - Write contract tests
-- [IDE Setup](ide-setup.md) - Configure VS Code
+- [Language Overview](../language/overview.md) - Complete language reference
+- [CLI Reference](../reference/cli.md) - All CLI commands
+- [Testing](../tooling/testing.md) - Write contract tests
+- [IDE Setup](../tooling/ide-setup.md) - Configure VS Code
