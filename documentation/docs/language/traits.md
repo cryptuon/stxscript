@@ -33,11 +33,11 @@ Traits cannot include variable or map declarations -- they define behavior only.
 
 ## Implementing Traits
 
-Use `@implements` (or `implements` keyword) to declare that a contract satisfies a trait:
+Use the `@contract` decorator and `implements` keyword on a `class` to declare that a contract satisfies a trait:
 
 ```typescript
-@implements(Token)
-contract MyToken {
+@contract
+class MyToken implements Token {
     @public
     function transfer(from: principal, to: principal, amount: uint): Response<bool, uint> {
         return ok(true);
@@ -81,8 +81,8 @@ trait Countable {
     get_count(): uint;
 }
 
-@implements(Countable)
-contract Counter {
+@contract
+class Counter implements Countable {
     @public
     function increment(): Response<uint, uint> {
         return ok(1u);
@@ -100,8 +100,8 @@ trait Token {
     transfer(to: principal, amount: uint): Response<bool, uint>;
 }
 
-@implements(Token)
-contract BadToken {
+@contract
+class BadToken implements Token {
     @public
     function transfer(to: principal, amount: int): Response<bool, uint> {
         // Error: Parameter type mismatch - expected uint, got int
@@ -142,8 +142,8 @@ trait SIP010 {
 ### Implementing SIP-010
 
 ```typescript
-@implements(SIP010)
-contract MyToken {
+@contract
+class MyToken implements SIP010 {
     const TOKEN_NAME: string = "My Token";
     const TOKEN_SYMBOL: string = "MTK";
     const DECIMALS: uint = 6u;
@@ -194,15 +194,7 @@ contract MyToken {
 
 ## Multiple Traits
 
-A contract can implement multiple traits:
-
-```typescript
-@implements(SIP010)
-@implements(Ownable)
-contract ManagedToken {
-    // Must satisfy both SIP010 and Ownable methods
-}
-```
+The grammar permits a single trait after `implements`. To combine behaviors, define a parent trait that includes both contracts' methods, or split the contract into multiple class declarations each implementing one trait.
 
 ## Trait as Parameter Types
 

@@ -109,8 +109,8 @@ trait SIP010 {
 // token.stx
 import { SIP010 } from "./traits/sip-010";
 
-@implements(SIP010)
-contract MyToken {
+@contract
+class MyToken implements SIP010 {
     // ...
 }
 ```

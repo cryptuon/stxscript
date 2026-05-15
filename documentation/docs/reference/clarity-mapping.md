@@ -216,8 +216,8 @@ trait Token {
 ```
 
 ```typescript
-@implements(Token)
-contract MyToken { }
+@contract
+class MyToken implements Token { }
 ```
 ```lisp
 (impl-trait .Token)
