@@ -1,6 +1,6 @@
 site_name: StxScript
 site_description: A TypeScript-inspired transpiler for Clarity smart contracts on the Stacks blockchain
-site_url: https://stxscript.docs.cryptuon.com/
+site_url: https://docs.cryptuon.com/stxscript/
 repo_url: https://github.com/cryptuon/stxscript
 repo_name: cryptuon/stxscript
 edit_uri: edit/main/documentation/docs/
