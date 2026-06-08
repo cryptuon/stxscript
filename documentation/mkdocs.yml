@@ -23,6 +23,7 @@ theme:
   features:
     - navigation.tabs
     - navigation.sections
+    - navigation.indexes
     - navigation.expand
     - navigation.top
     - search.suggest
@@ -34,33 +35,35 @@ theme:
 
 nav:
   - Home: index.md
-  - Guide:
-    - Getting Started: guide/getting-started.md
-    - Project Setup: guide/project-setup.md
-    - Deployment: guide/deployment.md
-  - Language:
-    - Overview: language/overview.md
-    - Types: language/types.md
-    - Variables & Constants: language/variables.md
-    - Functions: language/functions.md
-    - Expressions: language/expressions.md
-    - Control Flow: language/control-flow.md
-    - Data Structures: language/data-structures.md
-    - Error Handling: language/error-handling.md
-    - Traits: language/traits.md
-    - Modules & Imports: language/modules.md
+  - Docs:
+      - Guide:
+          - Getting Started: guide/getting-started.md
+          - Project Setup: guide/project-setup.md
+          - Deployment: guide/deployment.md
+      - Language:
+          - Overview: language/overview.md
+          - Types: language/types.md
+          - Variables & Constants: language/variables.md
+          - Functions: language/functions.md
+          - Expressions: language/expressions.md
+          - Control Flow: language/control-flow.md
+          - Data Structures: language/data-structures.md
+          - Error Handling: language/error-handling.md
+          - Traits: language/traits.md
+          - Modules & Imports: language/modules.md
   - Reference:
-    - CLI: reference/cli.md
-    - Python API: reference/api.md
-    - Clarity Mapping: reference/clarity-mapping.md
-    - Configuration: reference/configuration.md
+      - CLI: reference/cli.md
+      - Python API: reference/api.md
+      - Clarity Mapping: reference/clarity-mapping.md
+      - Configuration: reference/configuration.md
   - Tooling:
-    - IDE Setup: tooling/ide-setup.md
-    - Testing: tooling/testing.md
-    - Formatter & Linter: tooling/formatter-linter.md
-    - Package Manager: tooling/package-manager.md
-  - Examples: examples.md
-  - Contributing: contributing.md
+      - IDE Setup: tooling/ide-setup.md
+      - Testing: tooling/testing.md
+      - Formatter & Linter: tooling/formatter-linter.md
+      - Package Manager: tooling/package-manager.md
+  - Project:
+      - Examples: examples.md
+      - Contributing: contributing.md
 
 markdown_extensions:
   - admonition
