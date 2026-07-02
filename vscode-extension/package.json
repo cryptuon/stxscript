@@ -19,9 +19,13 @@
     "blockchain",
     "smart-contracts"
   ],
+  "homepage": "https://stxscript.cryptuon.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cryptuon/stxscript"
+    "url": "https://github.com/cryptuon/stxscript.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cryptuon/stxscript/issues"
   },
   "license": "MIT",
   "main": "./out/extension.js",

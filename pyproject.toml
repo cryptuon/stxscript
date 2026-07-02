@@ -1,12 +1,23 @@
 [project]
 name = "stxscript"
 version = "0.3.0"
-description = "A transpiler for StxScript to Clarity"
-authors = [{ name = "Dipankar Sarkar", email = "me@dipankar.name" }]
+description = "TypeScript-inspired transpiler that emits Clarity smart contracts for Stacks."
+authors = [{ name = "Cryptuon Research", email = "contact@cryptuon.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = ["stacks", "clarity", "blockchain", "smart-contracts", "transpiler"]
+keywords = ["stacks", "clarity", "transpiler", "smart-contracts", "blockchain", "typescript"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Code Generators",
+]
 
 dependencies = [
     "lark>=1.1.5",
@@ -32,9 +43,9 @@ stxscript = "stxscript.cli:main"
 stxscript-lsp = "stxscript.lsp_server:main"
 
 [project.urls]
-Homepage = "https://github.com/cryptuon/stxscript"
+Homepage = "https://stxscript.cryptuon.com/"
 Repository = "https://github.com/cryptuon/stxscript"
-Documentation = "https://github.com/cryptuon/stxscript"
+Documentation = "https://docs.cryptuon.com/stxscript/"
 
 [build-system]
 requires = ["hatchling"]

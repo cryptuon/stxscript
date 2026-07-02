@@ -5,6 +5,8 @@
 [![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/cryptuon/stxscript)
 [![Tests](https://img.shields.io/badge/tests-146%20passing-brightgreen.svg)](https://github.com/cryptuon/stxscript)
 
+**[🌐 Site](https://stxscript.cryptuon.com/) · [📚 Docs](https://docs.cryptuon.com/stxscript/) · [📦 PyPI package](https://pypi.org/project/stxscript/) · [🔬 Cryptuon Research](https://github.com/cryptuon)**
+
 A TypeScript-inspired transpiler for writing Clarity smart contracts on the Stacks blockchain.
 
 Write contracts with familiar syntax. Get valid, optimized Clarity output.
@@ -212,3 +214,13 @@ MIT License. See [LICENSE](LICENSE) for details.
 - [Issue Tracker](https://github.com/cryptuon/stxscript/issues)
 - [Stacks Blockchain](https://www.stacks.co/)
 - [Clarity Language](https://docs.stacks.co/docs/clarity/)
+
+---
+
+## Part of Cryptuon Research
+
+`stxscript` is one of [20 open-source blockchain-infrastructure projects](https://www.cryptuon.com/projects) from **[Cryptuon Research](https://www.cryptuon.com)** — blockchain theory, shipped as protocols.
+
+**Related projects:** [SolScript](https://solscript.cryptuon.com/) · [Zig-EVM](https://zig-evm.cryptuon.com/) · [commit-reveal](https://commit-reveal.cryptuon.com/)
+
+Docs: [docs.cryptuon.com/stxscript](https://docs.cryptuon.com/stxscript/) · Contact: [contact@cryptuon.com](mailto:contact@cryptuon.com)
