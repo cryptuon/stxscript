@@ -9,7 +9,17 @@
 
 A TypeScript-inspired transpiler for writing Clarity smart contracts on the Stacks blockchain.
 
-Write contracts with familiar syntax. Get valid, optimized Clarity output.
+Write contracts with familiar syntax — static types, decorators, and match expressions. Get valid, audit-ready Clarity output.
+
+## Why this matters in 2026
+
+Bitcoin is becoming a settlement layer for real applications, and Stacks is the L2 that gives Bitcoin an expressive, decidable smart-contract language: Clarity. As Bitcoin DeFi, RWA settlement, and Bitcoin-secured L2s grow, the bottleneck is people who can write Clarity. Clarity is deliberately Lisp-like and interpreted-on-chain for safety and decidability — powerful, but unfamiliar to the millions of developers who already write TypeScript.
+
+StxScript is a **chain-abstraction / developer-tooling** layer for that gap. It gives the large TypeScript developer base an ergonomic, typed path to Clarity: familiar `function`/`const`/`match` syntax and static types up front, with predictable, reviewable Clarity as the compiled output. The Clarity you ship is what auditors read — StxScript is a front-end for authoring, not a runtime you have to trust in production.
+
+- **For Bitcoin DeFi / RWA teams** — move faster on Stacks without hiring exclusively for Clarity experience.
+- **For TypeScript developers** — a low-friction on-ramp to Bitcoin-secured smart contracts.
+- **Honest framing** — StxScript covers a growing subset of Clarity, not 100%. See [Limitations & coverage](#limitations--coverage) and [ROADMAP.md](ROADMAP.md).
 
 ## Quick Start
 
@@ -93,6 +103,22 @@ function get_balance(account: principal): uint {
 - **Imports** - module system with contract calls
 - **Bitwise operations** - `&`, `|`, `^`, `~`, `<<`, `>>`
 
+## StxScript vs. writing raw Clarity
+
+StxScript is not a replacement for understanding Clarity — it is a faster, safer way to author it. An honest comparison:
+
+| Concern | Writing raw Clarity | StxScript |
+|---------|---------------------|-----------|
+| Syntax familiarity | Lisp/S-expressions; new for most devs | TypeScript-style `function`, `const`, `match`, decorators |
+| Type errors | Surfaced at `clarinet check` / deploy time | Caught earlier by static analysis before code generation |
+| Onboarding a TS team | Learn a new paradigm first | Productive on familiar syntax; learn Clarity semantics gradually |
+| Audit surface | You audit what you wrote | You audit the generated Clarity — output stays readable and reviewable |
+| Feature coverage | 100% of Clarity, always | Growing subset of Clarity (see limitations) |
+| Runtime trust | None added | None added — StxScript is compile-time only; nothing ships to chain but Clarity |
+| Toolchain | Clarinet, Clarity LSP | StxScript CLI + LSP + VS Code extension, emits Clarity for Clarinet |
+
+The tradeoff is deliberate: you trade full, immediate access to every Clarity primitive for ergonomics, static typing, and a shorter path from a TypeScript background to a deployable contract. When StxScript doesn't yet cover a construct, you drop down to hand-written Clarity — the output is designed to be edited.
+
 ## CLI Commands
 
 | Command | Description |
@@ -136,6 +162,17 @@ Run the language server:
 ```bash
 stxscript-lsp
 ```
+
+## Limitations & coverage
+
+StxScript compiles a growing subset of Clarity. Being specific about what it does *not* do yet is part of keeping the generated output audit-ready:
+
+- **Clarity feature coverage is partial.** Common contract patterns (tokens, NFTs, DeFi primitives, traits, maps, Response/Optional handling) are supported. Newer or niche Clarity built-ins may not have a StxScript surface yet — you drop down to hand-written Clarity for those.
+- **Output review is on you.** The transpiler emits readable Clarity, but StxScript does not replace an audit. Treat the generated `.clar` as the source of truth you review and test.
+- **Not a formal verifier.** StxScript performs static type checking and linting; it does not prove functional correctness.
+- **Loop constructs are bounded.** `for`/`while` compile to bounded `fold`, matching Clarity's decidability model — unbounded iteration is intentionally impossible.
+
+For the current coverage matrix, milestones, and production-readiness plan, see **[ROADMAP.md](ROADMAP.md)**.
 
 ## Documentation
 
